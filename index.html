@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>evil shape</title>
+        <style>
+            #game {
+                border: 1px solid black;
+            }
+        </style>
+    </head>
+    <body>
+        <input id="username">
+        <button id="play">Play</button>
+        <button id="ready">Ready</button>
+        <br>
+        <canvas width="800" height="600" id="game"></canvas>
+
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="playerClient.js"></script>
+        <script src="particleClient.js"></script>
+        <script src="cursorParticleClient.js"></script>
+        <script src="springClient.js"></script>
+        <script src="rectClient.js"></script>
+        <script src="levelClient.js"></script>
+        <script src="client.js"></script>
+    </body>
+</html>

@@ -1,0 +1,22 @@
+const toxi = require('toxiclibsjs');
+
+class ParticleServer extends toxi.physics2d.VerletParticle2D {
+    constructor(x, y, physics) {
+        super(x, y);
+        this.r = 8;
+        this.previousX = x;
+        this.previousY = y;
+        this.currentBoostTime = 0;
+
+        physics.addParticle(this);
+    }
+
+    rectCollision(rect) {
+        if (this.x >= rect.x && this.x <= rect.x + rect.w && this.y >= rect.y && this.y <= rect.y + rect.h) {
+            return true;
+        }
+        return false;
+    }
+}
+
+module.exports = ParticleServer;
