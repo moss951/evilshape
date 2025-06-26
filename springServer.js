@@ -38,6 +38,18 @@ class SpringServer extends toxi.physics2d.VerletSpring2D {
         }
         return false;
     }
+
+    handleCollision(rect) {
+        if (this.rectCollision(rect)) {
+            this.a.x = this.a.previousX;
+            this.b.x = this.b.previousX;
+        }
+
+        if (this.rectCollision(rect)) {
+            this.a.y = this.a.previousY;
+            this.b.y = this.b.previousY;
+        }
+    }
 }
 
 module.exports = SpringServer;

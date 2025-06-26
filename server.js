@@ -172,22 +172,15 @@ function gameLoop() {
 
     // wall collisions
     for (let i = 0; i < particles.length; i++) {
+        console.log(particles[i]);
         for (let j = 0; j < level1.walls.length; j++) {
-            if (particles[i].rectCollision(level1.walls[j])) {
-                particles[i].x = particles[i].previousX;
-                particles[i].y = particles[i].previousY;
-            }
+            particles[i].handleCollision(level1.walls[j]);
         }
     }
 
     for (let i = 0; i < springs.length; i++) {
         for (let j = 0; j < level1.walls.length; j++) {
-            if (springs[i].rectCollision(level1.walls[j])) {
-                springs[i].a.x = springs[i].a.previousX;
-                springs[i].a.y = springs[i].a.previousY;
-                springs[i].b.x = springs[i].b.previousX;
-                springs[i].b.y = springs[i].b.previousY;
-            }
+            springs[i].handleCollision(level1.walls[j]);
         }
     }
 

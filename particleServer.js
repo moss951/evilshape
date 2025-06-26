@@ -17,6 +17,11 @@ class ParticleServer extends toxi.physics2d.VerletParticle2D {
         }
         return false;
     }
+
+    handleCollision(rect) {
+        if (this.rectCollision(rect)) this.x = this.previousX;
+        if (this.rectCollision(rect)) this.y = this.previousY;
+    }
 }
 
 module.exports = ParticleServer;
