@@ -80,7 +80,7 @@ socket.on('initGame', (gameData) => {
     playerCursorParticle = cursorParticles[players[socket.id].particleIndex];
 
     // make springs
-    for (let i = 0; i < gameData.springs.length - 1; i++) { 
+    for (let i = 0; i < gameData.springsLength - 1; i++) { 
         springs.push(new SpringClient(particles[i], particles[i + 1]));
     }
     springs.push(new SpringClient(particles[particles.length - 1], particles[0]));
@@ -141,8 +141,6 @@ socket.on('updateGame', (gameData) => {
     for (let i = 0; i < particles.length; i++) {
         particles[i].x = gameData.particles[i].x;
         particles[i].y = gameData.particles[i].y;
-        particles[i].previousX = gameData.particles[i].previousX;
-        particles[i].previousY = gameData.particles[i].previousY;
         cursorParticles[i].x = gameData.cursorParticles[i].x;
         cursorParticles[i].y = gameData.cursorParticles[i].y;
     }

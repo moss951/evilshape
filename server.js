@@ -33,6 +33,9 @@ const springs = [];
 let cursorParticleNormalStrength, cursorParticleBoostStrength;
 const maxBoostTime = 60;
 
+let clientParticles = []
+let clientCursorParticles = [];
+
 const level1 = new LevelServer(
     { x:150, y:400 },
     [
@@ -145,7 +148,13 @@ function lobbyLoop() {
     }
     springs.push(new SpringServer(particles[particles.length - 1], particles[0], 0.01, physics));
 
-    io.emit("initGame", { particles:particles, springs:springs, cursorParticles:cursorParticles, walls:level1.walls });
+    // make sendable objects
+    for (let i = 0; i < particles.length; i++) {
+        clientParticles.push({ x:particles[i].x, y:particles[i].y });
+        clientCursorParticles.push({ x:cursorParticles[i].x, y:cursorParticles[i].y, attractionRadius:cursorParticles[i].attractionRadius });
+    }
+
+    io.emit("initGame", { particles:clientParticles, springsLength:springs.length, cursorParticles:clientCursorParticles, walls:level1.walls });
     gameLoopId = setInterval(gameLoop, 1000 / 60);
 }
 
@@ -172,7 +181,6 @@ function gameLoop() {
 
     // wall collisions
     for (let i = 0; i < particles.length; i++) {
-        console.log(particles[i]);
         for (let j = 0; j < level1.walls.length; j++) {
             particles[i].handleCollision(level1.walls[j]);
         }
@@ -184,5 +192,13 @@ function gameLoop() {
         }
     }
 
-    io.emit("updateGame", { particles:particles, springs:springs, cursorParticles:cursorParticles });
+    // update sendable objects
+    for (let i = 0; i < particles.length; i++) {
+        clientParticles[i].x = particles[i].x;
+        clientParticles[i].y = particles[i].y;
+        clientCursorParticles[i].x = cursorParticles[i].x;
+        clientCursorParticles[i].y = cursorParticles[i].y;
+    }
+
+    io.emit("updateGame", { particles:clientParticles, cursorParticles:clientCursorParticles });
 }
