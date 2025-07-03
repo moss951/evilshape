@@ -186,12 +186,6 @@ function gameLoop() {
         }
     }
 
-    for (let i = 0; i < springs.length; i++) {
-        for (let j = 0; j < level1.walls.length; j++) {
-            springs[i].handleCollision(level1.walls[j]);
-        }
-    }
-
     // update sendable objects
     for (let i = 0; i < particles.length; i++) {
         clientParticles[i].x = particles[i].x;
