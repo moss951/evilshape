@@ -1,7 +1,8 @@
 class PlayerServer {
-    constructor(username, particleIndex, ready) {
+    constructor(username, ready) {
         this.username = username;
-        this.particleIndex = particleIndex;
+        this.particleIndex = null;
+        this.cursorParticleIndex = null;
         this.ready = ready;
     }
 }

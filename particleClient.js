@@ -1,16 +1,19 @@
 class ParticleClient {
-    constructor(x, y) {
+    constructor(x, y, isPlayer) {
         this.x = x;
         this.y = y;
         this.r = 8;
         this.previousX = x;
         this.previousY = y;
+        this.isPlayer = isPlayer;
     }
 
-    draw(username) {
+    draw(username = "") {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
         ctx.stroke();
+
+        if (!this.isPlayer) return;
 
         ctx.font ="16px sans-serif";
 

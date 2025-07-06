@@ -2,6 +2,7 @@ const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 const socket = io();
 
+const PARTICLES_ALONG_EDGE = 2;
 let ready = false;
 
 let players = {};
@@ -36,8 +37,11 @@ function draw() {
     ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
     ctx.restore();
 
-    for (let i = 0; i < particles.length; i++) {
-        particles[i].draw(usernames[i]);
+    for (let i = 0; i < particles.length / PARTICLES_ALONG_EDGE; i++) {
+        particles[i * PARTICLES_ALONG_EDGE].draw(usernames[i]);
+    }
+
+    for (let i = 0; i < cursorParticles.length; i++) {
         cursorParticles[i].draw(usernames[i]);
     }
 
@@ -58,7 +62,7 @@ socket.on('updatePlayerList', (serverPlayers) => {
 
     for (let id in serverPlayers) {
         if (players[id] == undefined) {
-            players[id] = new PlayerClient(serverPlayers[id].username, serverPlayers[id].particleIndex, serverPlayers[id].ready);
+            players[id] = new PlayerClient(serverPlayers[id].username, serverPlayers[id].ready);
         }
         
         playersFound[id] = true;
@@ -70,20 +74,37 @@ socket.on('updatePlayerList', (serverPlayers) => {
 });
 
 socket.on('initGame', (gameData) => {
+    for (let id in gameData.players) {
+        players[id].particleIndex = gameData.players[id].particleIndex;
+        players[id].cursorParticleIndex = gameData.players[id].cursorParticleIndex;
+    }
+
     // make particles
     for (let i = 0; i < gameData.particles.length; i++) {
-        particles.push(new ParticleClient(gameData.particles[i].x, gameData.particles[i].y));
+        particles.push(new ParticleClient(gameData.particles[i].x, gameData.particles[i].y, gameData.particles[i].isPlayer));
+    }
+
+    for (let i = 0; i < gameData.cursorParticles.length; i++) {
         cursorParticles.push(new CursorParticleClient(gameData.cursorParticles[i].x, gameData.cursorParticles[i].y, gameData.cursorParticles[i].attractionRadius));
     }
 
     playerParticle = particles[players[socket.id].particleIndex];
-    playerCursorParticle = cursorParticles[players[socket.id].particleIndex];
+    playerCursorParticle = cursorParticles[players[socket.id].cursorParticleIndex];
 
     // make springs
-    for (let i = 0; i < gameData.springsLength - 1; i++) { 
-        springs.push(new SpringClient(particles[i], particles[i + 1]));
+    for (let i = 0; i < gameData.springs.length; i++) {
+        let particle1, particle2;
+        for (let j = 0; j < particles.length; j++) {
+            if (gameData.springs[i].particle1.x == particles[j].x && gameData.springs[i].particle1.y == particles[j].y) {
+                particle1 = particles[j];
+            }
+
+            if (gameData.springs[i].particle2.x == particles[j].x && gameData.springs[i].particle2.y == particles[j].y) {
+                particle2 = particles[j];
+            }
+        }
+        springs.push(new SpringClient(particle1, particle2));
     }
-    springs.push(new SpringClient(particles[particles.length - 1], particles[0]));
 
     // load level
     for (let i = 0; i < gameData.walls.length; i++) {
@@ -91,7 +112,7 @@ socket.on('initGame', (gameData) => {
     }
 
     // get usernames from dictionary in array
-    for (let i = 0; i < Object.keys(players).length; i++) {
+    for (let i = 0; i < particles.length; i++) {
         for (let id in players) {
             if (i == players[id].particleIndex) {
                 usernames.push(players[id].username);
@@ -141,6 +162,9 @@ socket.on('updateGame', (gameData) => {
     for (let i = 0; i < particles.length; i++) {
         particles[i].x = gameData.particles[i].x;
         particles[i].y = gameData.particles[i].y;
+    }
+
+    for (let i = 0; i < cursorParticles.length; i++) {
         cursorParticles[i].x = gameData.cursorParticles[i].x;
         cursorParticles[i].y = gameData.cursorParticles[i].y;
     }
