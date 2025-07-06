@@ -3,8 +3,17 @@
     <head>
         <title>evil shape</title>
         <style>
+            @font-face {
+                /* https://www.dafont.com/nintendo-ds-bios.font */
+                font-family: 'DS-BIOS';
+                src: url('assets/fonts/Nintendo-DS-BIOS.ttf') format('truetype');
+            }
+
             #game {
                 border: 1px solid black;
+                width: 800px;
+                height: 600px;
+                image-rendering: crisp-edges;
             }
         </style>
     </head>
@@ -16,12 +25,12 @@
         <canvas width="800" height="600" id="game"></canvas>
 
         <script src="/socket.io/socket.io.js"></script>
-        <script src="playerClient.js"></script>
-        <script src="particleClient.js"></script>
-        <script src="cursorParticleClient.js"></script>
-        <script src="springClient.js"></script>
-        <script src="rectClient.js"></script>
-        <script src="levelClient.js"></script>
-        <script src="client.js"></script>
+        <script src="client/playerClient.js"></script>
+        <script src="client/particleClient.js"></script>
+        <script src="client/cursorParticleClient.js"></script>
+        <script src="client/springClient.js"></script>
+        <script src="client/rectClient.js"></script>
+        <script src="client/levelClient.js"></script>
+        <script src="client/client.js"></script>
     </body>
 </html>

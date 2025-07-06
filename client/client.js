@@ -5,13 +5,13 @@ const socket = io();
 const PARTICLES_ALONG_EDGE = 2;
 let ready = false;
 
-let players = {};
-let usernames = [];
-let particles = [];
-let springs = [];
-let cursorParticles = [];
-let level = new LevelClient([]);
-let scrollOffset = { x:0, y:0 };
+const players = {};
+const usernames = [];
+const particles = [];
+const springs = [];
+const cursorParticles = [];
+const level = new LevelClient([]);
+const scrollOffset = { x:0, y:0 };
 
 let playerParticle, playerCursorParticle;
 let drawIntervalId;

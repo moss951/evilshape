@@ -10,7 +10,7 @@ class CursorParticleClient extends ParticleClient {
         ctx.arc(this.x, this.y, this.attractionRadius, 0, 2 * Math.PI);
         ctx.stroke();
 
-        ctx.font ="16px sans-serif";
+        ctx.font ="24px DS-BIOS";
 
         if (this.usernameOffset == undefined) {
             this.usernameOffset = ctx.measureText(username).width / 2;

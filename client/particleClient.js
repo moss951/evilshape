@@ -15,7 +15,7 @@ class ParticleClient {
 
         if (!this.isPlayer) return;
 
-        ctx.font ="16px sans-serif";
+        ctx.font ="24px DS-BIOS";
 
         if (this.usernameOffset == undefined) {
             this.usernameOffset = ctx.measureText(username).width / 2;
