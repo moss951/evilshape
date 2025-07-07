@@ -32,8 +32,8 @@ const particles = [];
 const cursorParticles = [];
 const springs = [];
 
-const cursorParticleNormalStrength = -5;
-const cursorParticleBoostStrength = cursorParticleNormalStrength * 10;
+let cursorParticleNormalStrength;
+let cursorParticleBoostStrength;
 const maxBoostTime = 60;
 
 const clientParticles = []
@@ -136,6 +136,7 @@ function lobbyLoop() {
     const particleCoords = getPolygonVertexCoords(numPlayers * PARTICLES_ALONG_EDGE, level1.spawnPos.x, level1.spawnPos.y, 50, 50);
     for (let i = 0; i < particleCoords.length; i++) {
         particles.push(new ParticleServer(particleCoords[i].x, particleCoords[i].y, physics, i % PARTICLES_ALONG_EDGE == 0));
+
     }
 
     for (let i = 0; i < numPlayers; i++) {
@@ -151,12 +152,11 @@ function lobbyLoop() {
         i2 += PARTICLES_ALONG_EDGE;
     }
 
-    // add repulsion to every particle except adjacent ones
-    for (let i = 0; i < particles.length; i++) {
-        for (let j = 0; j < particles.length; j++) {
-            if (Math.abs(i - j) > 1 && Math.abs(i - j) != particles.length - 1) {
-                particles[i].addBehavior(new toxi.physics2d.behaviors.AttractionBehavior(particles[j], particles[j].r * (MAX_PLAYERS / 2 + MAX_PLAYERS - particles.length), -5));
-            }
+    // add repulsion to every player particle
+    for (let i = 0; i < particles.length; i += PARTICLES_ALONG_EDGE) {
+        for (let j = 0; j < particles.length; j += PARTICLES_ALONG_EDGE) {
+            if (i == j) continue;
+            particles[i].addBehavior(new toxi.physics2d.behaviors.AttractionBehavior(particles[j], particles[j].r * 5, -5));
         }
     }
 
@@ -178,6 +178,10 @@ function lobbyLoop() {
     for (let i = 0; i < springs.length; i++) {
         clientSprings.push({ particle1:{ x:springs[i].a.x, y:springs[i].a.y }, particle2:{ x:springs[i].b.x, y:springs[i].b.y } });
     }
+
+    // update repulsion strength relative to player count
+    cursorParticleNormalStrength = -particles.length * 2;
+    cursorParticleBoostStrength = cursorParticleNormalStrength * 2.5;
 
     io.emit("initGame", { players:players, particles:clientParticles, springs:clientSprings, cursorParticles:clientCursorParticles, walls:level1.walls });
     gameLoopId = setInterval(gameLoop, 1000 / 60);

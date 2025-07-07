@@ -16,6 +16,7 @@ class ParticleServer extends toxi.physics2d.VerletParticle2D {
         if (this.x >= rect.x && this.x <= rect.x + rect.w && this.y >= rect.y && this.y <= rect.y + rect.h) {
             return true;
         }
+
         return false;
     }
 
