@@ -16,6 +16,12 @@ const scrollOffset = { x:0, y:0 };
 let playerParticle, playerCursorParticle;
 let drawIntervalId;
 
+// lower resolution canvas
+const scaleFactor = 2;
+canvas.width = canvas.clientWidth / scaleFactor;
+canvas.height = canvas.clientHeight / scaleFactor;
+ctx.scale(1 / scaleFactor, 1 / scaleFactor);
+
 document.getElementById("play").addEventListener("click", () => {
     document.getElementById("play").disabled = true;
     let username = document.getElementById("username").value;
@@ -37,6 +43,9 @@ function draw() {
     ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
     ctx.restore();
 
+    drawGrid();
+    level.draw();
+
     for (let i = 0; i < particles.length / PARTICLES_ALONG_EDGE; i++) {
         particles[i * PARTICLES_ALONG_EDGE].draw(usernames[i]);
     }
@@ -48,8 +57,6 @@ function draw() {
     for (let i = 0; i < springs.length; i++) {
         springs[i].draw();
     }
-
-    level.draw();
 
     // scroll
     let previousScrollOffset = { ...scrollOffset };
@@ -192,4 +199,37 @@ function updateScollOffset() {
         scrollOffset.y -= overflow;
         ctx.translate(0, overflow);
     }
+}
+
+function drawGrid() {
+    let gridSize = 50;
+
+    let minX = -ctx.getTransform().e * 2;
+    let minY = -ctx.getTransform().f * 2;
+
+    let maxX = minX + canvas.clientWidth * 2;
+    let maxY = minY + canvas.clientHeight * 2;
+
+    let startX = Math.floor(minX / gridSize) * gridSize;
+    let startY = Math.floor(minY / gridSize) * gridSize;
+
+    ctx.save();
+    ctx.strokeStyle = "lightgray";
+    ctx.lineWidth = 1;
+
+    for (let x = startX; x < maxX; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, minY);
+        ctx.lineTo(x, maxY);
+        ctx.stroke();
+    }
+
+    for (let y = startY; y < maxY; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(minX, y);
+        ctx.lineTo(maxX, y);
+        ctx.stroke();
+    }
+
+    ctx.restore();
 }

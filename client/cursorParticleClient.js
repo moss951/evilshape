@@ -6,6 +6,9 @@ class CursorParticleClient extends ParticleClient {
     }
 
     draw(username) {
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 1.5;
+
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.attractionRadius, 0, 2 * Math.PI);
         ctx.stroke();

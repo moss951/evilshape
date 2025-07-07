@@ -49,7 +49,7 @@ const level1 = new LevelServer(
 
         new RectServer(200, 500, 50, 50),
         new RectServer(400, 150, 50, 300),
-        new RectServer(550, 100, 50, 450),
+        //new RectServer(550, 100, 50, 450),
         new RectServer(700, 50, 50, 400),
         new RectServer(200, 150, 200, 50),
 
@@ -61,7 +61,7 @@ const level1 = new LevelServer(
     ]
 );
 
-let lobbyLoopIntervalId = setInterval(lobbyLoop, 1000);
+let lobbyLoopIntervalId = setInterval(lobbyLoop, 1000 / 60);
 let gameLoopId;
 
 server.listen(3000, () => {
