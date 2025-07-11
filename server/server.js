@@ -34,7 +34,7 @@ const springs = [];
 
 let cursorParticleNormalStrength;
 let cursorParticleBoostStrength;
-const maxBoostTime = 60;
+const maxBoostTime = 10;
 
 const clientParticles = []
 const clientCursorParticles = [];
@@ -111,6 +111,7 @@ io.on("connection", (socket) => {
 
     socket.on("cursorBoostStopRequest", () => {
         particles[players[socket.id].particleIndex].behaviors[0].attrStrength = cursorParticleNormalStrength;
+        particles[players[socket.id].particleIndex].currentBoostTime = 0;
     });
 });
 
@@ -168,7 +169,7 @@ function lobbyLoop() {
 
     // make sendable objects
     for (let i = 0; i < particles.length; i++) {
-        clientParticles.push({ x:particles[i].x, y:particles[i].y, isPlayer:particles[i].isPlayer });
+        clientParticles.push({ x:particles[i].x, y:particles[i].y, isPlayer:particles[i].isPlayer, currentBoostTime:particles[i].currentBoostTime });
     }
 
     for (let i = 0; i < cursorParticles.length; i++) {
@@ -219,6 +220,7 @@ function gameLoop() {
     for (let i = 0; i < particles.length; i++) {
         clientParticles[i].x = particles[i].x;
         clientParticles[i].y = particles[i].y;
+        clientParticles[i].currentBoostTime = particles[i].currentBoostTime;
     }
 
     for (let i = 0; i < cursorParticles.length; i++) {

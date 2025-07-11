@@ -5,8 +5,9 @@ class SpringClient {
     }
 
     draw() {
+        ctx.setLineDash([0, 0]);
         ctx.strokeStyle = "black";
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 2;
 
         ctx.beginPath();
         ctx.moveTo(this.particle1.x, this.particle1.y);

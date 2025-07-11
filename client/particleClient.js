@@ -9,8 +9,9 @@ class ParticleClient {
     }
 
     draw(username = "") {
+        ctx.setLineDash([0, 0]);
         ctx.strokeStyle = "black";
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 2;
 
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI);

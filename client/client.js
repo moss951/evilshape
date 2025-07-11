@@ -51,7 +51,7 @@ function draw() {
     }
 
     for (let i = 0; i < cursorParticles.length; i++) {
-        cursorParticles[i].draw(usernames[i]);
+        cursorParticles[i].draw(usernames[i], particles[i * PARTICLES_ALONG_EDGE].currentBoostTime);
     }
 
     for (let i = 0; i < springs.length; i++) {
@@ -169,6 +169,7 @@ socket.on('updateGame', (gameData) => {
     for (let i = 0; i < particles.length; i++) {
         particles[i].x = gameData.particles[i].x;
         particles[i].y = gameData.particles[i].y;
+        particles[i].currentBoostTime = gameData.particles[i].currentBoostTime;
     }
 
     for (let i = 0; i < cursorParticles.length; i++) {
@@ -214,6 +215,7 @@ function drawGrid() {
     let startY = Math.floor(minY / gridSize) * gridSize;
 
     ctx.save();
+    
     ctx.strokeStyle = "lightgray";
     ctx.lineWidth = 1;
 
