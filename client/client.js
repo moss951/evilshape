@@ -104,7 +104,7 @@ function initLobby() {
 function lobbyMouseDown(e) {
     if (readyButton.isClicked(e.clientX - bounds.left, e.clientY - bounds.top)) {
         ready = !ready;
-        socket.emit("ready");
+        socket.emit("ready", ready);
     }
 }
 
@@ -128,6 +128,8 @@ function drawLobby() {
         i++;
     }
 
+    if (ready) readyButton.text = "cancel";
+    else readyButton.text = "ready";
     readyButton.draw();
 }
 

@@ -86,9 +86,9 @@ io.on("connection", (socket) => {
         }
     });
 
-    socket.on("ready", () => {
+    socket.on("ready", (ready) => {
         console.log(socket.id + " readied");
-        players[socket.id].ready = true;
+        players[socket.id].ready = ready;
         io.emit('updatePlayerReady', { id:socket.id, ready:players[socket.id].ready });
     });
 
