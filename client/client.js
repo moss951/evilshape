@@ -103,7 +103,7 @@ function initLobby() {
 
 function lobbyMouseDown(e) {
     if (readyButton.isClicked(e.clientX - bounds.left, e.clientY - bounds.top)) {
-        ready = true;
+        ready = !ready;
         socket.emit("ready");
     }
 }
