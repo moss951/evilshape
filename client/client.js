@@ -28,11 +28,6 @@ let cursorInputTimer = 0;
 let username = "";
 let playButton = new Button(300, 400, 200, 50, "play");
 
-// lobby stuff
-let readyButton = new Button(300, 400, 200, 50, "ready");
-
-initMainMenu();
-
 function initMainMenu() {
     drawIntervalId = setInterval(drawMainMenu, 1000 / 60);
     document.addEventListener("keydown", typeUsername);
@@ -93,6 +88,7 @@ function drawMainMenu() {
 }
 
 // lobby stuff
+let readyButton = new Button(300, 400, 200, 50, "ready");
 
 function initLobby() {
     drawIntervalId = setInterval(drawLobby, 1000 / 60);
@@ -132,6 +128,8 @@ function drawLobby() {
     else readyButton.text = "ready";
     readyButton.draw();
 }
+
+// in game stuff
 
 function updateScollOffset() {
     if (playerParticle.x > canvas.clientWidth / 2 + scrollOffset.x) {
@@ -218,6 +216,8 @@ function drawGame() {
     socket.emit("cursorMoveRequest", { x:scrollOffset.x - previousScrollOffset.x, y:scrollOffset.y - previousScrollOffset.y});
 }
 
+// server stuff
+
 socket.on('updatePlayerList', (serverPlayers) => {
     let playersFound = {};
 
@@ -277,7 +277,12 @@ socket.on('initGame', (gameData) => {
 
     // load level
     for (let i = 0; i < gameData.walls.length; i++) {
-        level.walls.push(new RectClient(gameData.walls[i].x, gameData.walls[i].y, gameData.walls[i].w, gameData.walls[i].h));
+        if (gameData.walls[i].h == 0) {
+            level.walls.push(new FloorClient(gameData.walls[i].x, gameData.walls[i].y, gameData.walls[i].w));
+        }
+        else {
+            level.walls.push(new RectClient(gameData.walls[i].x, gameData.walls[i].y, gameData.walls[i].w, gameData.walls[i].h));
+        }
     }
 
     // get usernames from dictionary in array
@@ -342,3 +347,5 @@ socket.on('updateGame', (gameData) => {
         cursorParticles[i].y = gameData.cursorParticles[i].y;
     }
 });
+
+initMainMenu();

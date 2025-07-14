@@ -7,7 +7,6 @@ class RectClient {
     }
 
     draw() {
-        ctx.setLineDash([0, 0]);
         ctx.strokeStyle = "black";
         ctx.lineWidth = 2;
 

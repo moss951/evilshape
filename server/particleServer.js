@@ -12,17 +12,9 @@ class ParticleServer extends toxi.physics2d.VerletParticle2D {
         physics.addParticle(this);
     }
 
-    rectCollision(rect) {
-        if (this.x >= rect.x && this.x <= rect.x + rect.w && this.y >= rect.y && this.y <= rect.y + rect.h) {
-            return true;
-        }
-
-        return false;
-    }
-
     handleCollision(rect) {
-        if (this.rectCollision(rect)) this.x = this.previousX;
-        if (this.rectCollision(rect)) this.y = this.previousY;
+        if (rect.particleCollision(this)) this.x = this.previousX;
+        if (rect.particleCollision(this)) this.y = this.previousY;
     }
 }
 

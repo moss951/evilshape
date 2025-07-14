@@ -18,6 +18,7 @@ const SpringServer = require('./springServer');
 const CursorParticleServer = require('./cursorParticleServer');
 const RectServer = require('./rectServer');
 const LevelServer = require('./levelServer');
+const FloorServer = require('./floorServer');
 
 const toxi = require('toxiclibsjs');
 const physics = new toxi.physics2d.VerletPhysics2D();
@@ -51,13 +52,19 @@ const level1 = new LevelServer(
         new RectServer(400, 150, 50, 300),
         new RectServer(550, 100, 50, 450),
         new RectServer(700, 50, 50, 400),
-        new RectServer(200, 150, 200, 50),
+        new RectServer(350, 150, 50, 50),
 
         new RectServer(750, 50, 50, 50),
         new RectServer(950, -50, 50, 50),
         new RectServer(750, -150, 50, 50),
 
         new RectServer(400, -150, 150, 50),
+        new FloorServer(450, 450, 100),
+        new FloorServer(450, 300, 100),
+        new FloorServer(600, 450, 100),
+        new FloorServer(600, 350, 100),
+        new FloorServer(600, 250, 100),
+        new FloorServer(600, 150, 100),
     ]
 );
 
@@ -82,6 +89,7 @@ io.on("connection", (socket) => {
         if (players[socket.id] != undefined) {
             console.log(socket.id + " disconnected");
             delete players[socket.id];
+            numPlayers--;
             io.emit('updatePlayerList', players);
         }
     });
