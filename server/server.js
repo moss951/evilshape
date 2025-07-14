@@ -89,6 +89,7 @@ io.on("connection", (socket) => {
     socket.on("ready", () => {
         console.log(socket.id + " readied");
         players[socket.id].ready = true;
+        io.emit('updatePlayerReady', { id:socket.id, ready:players[socket.id].ready });
     });
 
     socket.on("cursorMoveRequest", (cursorPos) => {

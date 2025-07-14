@@ -124,7 +124,7 @@ function drawLobby() {
     let i = 0;
     for (let id in players) {
         ctx.fillStyle = "black";
-        ctx.fillText(players[id].username, 50, ctx.measureText(players[id].username).actualBoundingBoxAscent + ctx.measureText(players[id].username).actualBoundingBoxDescent + 48 * i + 64 + 50);
+        ctx.fillText(players[id].username + (players[id].ready ? " - ready" : ""), 50, ctx.measureText(players[id].username).actualBoundingBoxAscent + ctx.measureText(players[id].username).actualBoundingBoxDescent + 48 * i + 64 + 50);
         i++;
     }
 
@@ -230,6 +230,10 @@ socket.on('updatePlayerList', (serverPlayers) => {
     for (let id in players) {
         if (!playersFound[id]) delete players[id];
     }
+});
+
+socket.on('updatePlayerReady', (playerData) => {
+    players[playerData.id].ready = playerData.ready;
 });
 
 socket.on('initGame', (gameData) => {
