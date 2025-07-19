@@ -16,12 +16,11 @@ class Button {
             ctx.fill();
         }
 
+        ctx.lineWidth = 2;
         ctx.strokeStyle = "black";
-        for (let i = 0; i < 3; i++) {
-            ctx.beginPath();
-            ctx.rect(this.x, this.y, this.w, this.h);
-            ctx.stroke();
-        }
+        ctx.beginPath();
+        ctx.rect(this.x, this.y, this.w, this.h);
+        ctx.stroke();
 
         ctx.fillStyle = "black";
         ctx.font = "48px DS-BIOS";

@@ -5,6 +5,7 @@ const socket = io();
 
 const PARTICLES_ALONG_EDGE = 2;
 let ready = false;
+let inGame = false;
 
 const players = {};
 const usernames = [];
@@ -16,12 +17,6 @@ const scrollOffset = { x:0, y:0 };
 
 let playerParticle, playerCursorParticle;
 let drawIntervalId;
-
-// lower resolution canvas
-const scaleFactor = 2;
-canvas.width = canvas.clientWidth / scaleFactor;
-canvas.height = canvas.clientHeight / scaleFactor;
-ctx.scale(1 / scaleFactor, 1 / scaleFactor);
 
 // main menu stuff
 let cursorInputTimer = 0;
@@ -71,11 +66,10 @@ function drawMainMenu() {
     playButton.draw();
 
     // username input
-    for (let i = 0; i < 3; i++) {
-        ctx.beginPath();
-        ctx.rect(150, 300, 500, 50);
-        ctx.stroke();
-    }
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.rect(150, 300, 500, 50);
+    ctx.stroke();
 
     cursorInputTimer++;
     if (cursorInputTimer >= 24) {
@@ -92,6 +86,8 @@ let readyButton = new Button(300, 400, 200, 50, "ready");
 
 function initLobby() {
     drawIntervalId = setInterval(drawLobby, 1000 / 60);
+    socket.emit("lobbyPlayerListRequest");
+    socket.emit("gameStateRequest");
 
     document.addEventListener("mousedown", lobbyMouseDown);
     document.addEventListener("mouseup", lobbyMouseUp);
@@ -119,8 +115,16 @@ function drawLobby() {
     ctx.font = "48px DS-BIOS";
     let i = 0;
     for (let id in players) {
+        let playerString = players[id].username;
+        if (!inGame) {
+            if (players[id].ready) playerString += " - ready";
+        }
+        else {
+            if (socket.id != id) playerString += " - in game";
+        }
+
         ctx.fillStyle = "black";
-        ctx.fillText(players[id].username + (players[id].ready ? " - ready" : ""), 50, ctx.measureText(players[id].username).actualBoundingBoxAscent + ctx.measureText(players[id].username).actualBoundingBoxDescent + 48 * i + 64 + 50);
+        ctx.fillText(playerString, 50, ctx.measureText(players[id].username).actualBoundingBoxAscent + ctx.measureText(players[id].username).actualBoundingBoxDescent + 48 * i + 64 + 50);
         i++;
     }
 
@@ -130,7 +134,6 @@ function drawLobby() {
 }
 
 // in game stuff
-
 function updateScollOffset() {
     if (playerParticle.x > canvas.clientWidth / 2 + scrollOffset.x) {
         let overflow = playerParticle.x - (canvas.clientWidth / 2 + scrollOffset.x);
@@ -214,10 +217,31 @@ function drawGame() {
     let previousScrollOffset = { ...scrollOffset };
     updateScollOffset()
     socket.emit("cursorMoveRequest", { x:scrollOffset.x - previousScrollOffset.x, y:scrollOffset.y - previousScrollOffset.y});
+
+    if (paused) drawPauseMenu();
+}
+
+// inputs
+function inGameMouseMove(e) {
+    if (document.pointerLockElement == canvas) {
+        socket.emit("cursorMoveRequest", { x:e.movementX, y:e.movementY });
+    }
+}
+
+function inGameMouseDown(e) {
+    if (document.pointerLockElement != canvas) {
+        socket.emit("cursorResetPosRequest", { x:e.clientX - bounds.left + scrollOffset.x, y:e.clientY - bounds.top + scrollOffset.y });
+        canvas.requestPointerLock();
+    }
+
+    socket.emit("cursorBoostStartRequest");
+}
+
+function inGameMouseUp() {
+    socket.emit("cursorBoostStopRequest");
 }
 
 // server stuff
-
 socket.on('updatePlayerList', (serverPlayers) => {
     let playersFound = {};
 
@@ -236,6 +260,10 @@ socket.on('updatePlayerList', (serverPlayers) => {
 
 socket.on('updatePlayerReady', (playerData) => {
     players[playerData.id].ready = playerData.ready;
+});
+
+socket.on("updateGameState", (state) => {
+    inGame = state;
 });
 
 socket.on('initGame', (gameData) => {
@@ -302,28 +330,10 @@ socket.on('initGame', (gameData) => {
     // start game and inputs
     drawIntervalId = setInterval(drawGame, 1000 / 60);
 
-    document.addEventListener("mousemove", (e) => {
-        if (document.pointerLockElement == canvas) {
-            socket.emit("cursorMoveRequest", { x:e.movementX, y:e.movementY });
-        }
-    });
-
-    document.addEventListener("mousedown", (e) => {
-        if (document.pointerLockElement != canvas) {
-            socket.emit("cursorResetPosRequest", { x:e.clientX - bounds.left + scrollOffset.x, y:e.clientY - bounds.top + scrollOffset.y });
-            canvas.requestPointerLock();
-        }
-
-        socket.emit("cursorBoostStartRequest");
-    });
-
-    document.addEventListener("mouseup", () => {
-        socket.emit("cursorBoostStopRequest");
-    });
-
-    document.addEventListener("focus", () => {
-        updateScollOffset();
-    });
+    document.addEventListener("mousemove", inGameMouseMove);
+    document.addEventListener("mousedown", inGameMouseDown);
+    document.addEventListener("mouseup", inGameMouseUp);
+    document.addEventListener("focus", updateScollOffset);
 
     // debug controls
     document.addEventListener("keydown", (e) => {

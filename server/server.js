@@ -25,21 +25,23 @@ const physics = new toxi.physics2d.VerletPhysics2D();
 const gravity = new toxi.physics2d.behaviors.GravityBehavior(new toxi.geom.Vec2D(0, 0.5));
 physics.addBehavior(gravity);
 
-const MAX_PLAYERS = 10; // not actually max players, just the max amount of players intended
 const PARTICLES_ALONG_EDGE = 2;
 let numPlayers = 0;
-const players = {};
-const particles = [];
-const cursorParticles = [];
-const springs = [];
-
 let cursorParticleNormalStrength;
 let cursorParticleBoostStrength;
 const maxBoostTime = 10;
 
-const clientParticles = []
-const clientCursorParticles = [];
-const clientSprings = [];
+let lobbyPlayers = {};
+let players = {};
+let particles = [];
+let cursorParticles = [];
+let springs = [];
+
+let clientParticles = []
+let clientCursorParticles = [];
+let clientSprings = [];
+
+let inGame = false;
 
 const level1 = new LevelServer(
     { x:150, y:400 },
@@ -68,8 +70,7 @@ const level1 = new LevelServer(
     ]
 );
 
-let lobbyLoopIntervalId = setInterval(lobbyLoop, 1000 / 60);
-let gameLoopId;
+let loopId = setInterval(lobbyLoop, 1000 / 60);
 
 server.listen(3000, () => {
     console.log("started listening on port 3000");
@@ -77,27 +78,35 @@ server.listen(3000, () => {
 
 io.on("connection", (socket) => {
     socket.on("join", (newPlayerData) => {
-        if (numPlayers < MAX_PLAYERS) {
-            console.log(socket.id  + " connected");
-            players[socket.id] = new PlayerServer(newPlayerData.username, false);
-            numPlayers++;
-            io.emit('updatePlayerList', players);
-        }
+        console.log(socket.id  + " connected");
+        lobbyPlayers[socket.id] = new PlayerServer(newPlayerData.username, false);
+        numPlayers++;
+        if (!inGame) io.emit('updatePlayerList', lobbyPlayers);
     });
 
     socket.on('disconnect', () => {
-        if (players[socket.id] != undefined) {
+        if (lobbyPlayers[socket.id] != undefined) {
             console.log(socket.id + " disconnected");
-            delete players[socket.id];
+            delete lobbyPlayers[socket.id];
             numPlayers--;
-            io.emit('updatePlayerList', players);
+            if (!inGame) io.emit('updatePlayerList', lobbyPlayers);
         }
     });
 
     socket.on("ready", (ready) => {
         console.log(socket.id + " readied");
-        players[socket.id].ready = ready;
-        io.emit('updatePlayerReady', { id:socket.id, ready:players[socket.id].ready });
+        lobbyPlayers[socket.id].ready = ready;
+        if (!inGame) io.emit('updatePlayerReady', { id:socket.id, ready:lobbyPlayers[socket.id].ready });
+    });
+
+    socket.on("lobbyPlayerListRequest", () => {
+        console.log(socket.id + " requested lobby player list");
+        socket.emit("updatePlayerList", lobbyPlayers);
+    });
+
+    socket.on("gameStateRequest", () => {
+        console.log(socket.id + " requested game state");
+        socket.emit("updateGameState", inGame);
     });
 
     socket.on("cursorMoveRequest", (cursorPos) => {
@@ -134,13 +143,19 @@ function getPolygonVertexCoords(numParticles, centerX, centerY, radiusX, radiusY
 }
 
 function lobbyLoop() {
-    if (Object.keys(players).length == 0) return;
-    for (let id in players) {
-        if (players[id] != undefined && !players[id].ready) return;
+    if (numPlayers == 0) return;
+    for (let id in lobbyPlayers) {
+        if (lobbyPlayers[id] != undefined && !lobbyPlayers[id].ready) return;
     }
 
-    clearInterval(lobbyLoopIntervalId);
+    clearInterval(loopId);
     console.log("game start");
+    inGame = true;
+
+    // make players
+    for (let id in lobbyPlayers) {
+        players[id] = new PlayerServer(lobbyPlayers[id].username, true);
+    }
 
     // make particles
     const particleCoords = getPolygonVertexCoords(numPlayers * PARTICLES_ALONG_EDGE, level1.spawnPos.x, level1.spawnPos.y, 50, 50);
@@ -194,7 +209,7 @@ function lobbyLoop() {
     cursorParticleBoostStrength = cursorParticleNormalStrength * 2.5;
 
     io.emit("initGame", { players:players, particles:clientParticles, springs:clientSprings, cursorParticles:clientCursorParticles, walls:level1.walls });
-    gameLoopId = setInterval(gameLoop, 1000 / 60);
+    loopId = setInterval(gameLoop, 1000 / 60);
 }
 
 function gameLoop() {
@@ -238,4 +253,18 @@ function gameLoop() {
     }
 
     io.emit("updateGame", { particles:clientParticles, cursorParticles:clientCursorParticles });
+
+    if (numPlayers == 0) {
+        clearInterval(loopId);
+        lobbyPlayers = {};
+        players = {};
+        particles = [];
+        cursorParticles = [];
+        springs = [];
+        clientParticles = []
+        clientCursorParticles = [];
+        clientSprings = [];
+        inGame = false;
+        loopId = setInterval(lobbyLoop, 1000 / 60);
+    }
 }
