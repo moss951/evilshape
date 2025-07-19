@@ -7,7 +7,7 @@ class CircleServer extends ShapeServer {
     }
 
     particleCollision(particle) {
-        if (Math.sqrt( (particle.x - this.x) ** 2 + (particle.y - this.y) ** 2 ) < this.r) {
+        if (Math.sqrt( (particle.x - this.x) ** 2 + (particle.y - this.y) ** 2 ) <= this.r) {
             return true;
         }
         return false;
