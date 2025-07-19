@@ -124,7 +124,7 @@ function drawLobby() {
         }
 
         ctx.fillStyle = "black";
-        ctx.fillText(playerString, 50, ctx.measureText(players[id].username).actualBoundingBoxAscent + ctx.measureText(players[id].username).actualBoundingBoxDescent + 48 * i + 64 + 50);
+        ctx.fillText(playerString, 50, 48 + 48 * i + 64 + 25);
         i++;
     }
 
@@ -160,36 +160,27 @@ function updateScollOffset() {
 
 function drawGrid() {
     let gridSize = 50;
-
-    let minX = -ctx.getTransform().e * 2;
-    let minY = -ctx.getTransform().f * 2;
-
-    let maxX = minX + canvas.clientWidth * 2;
-    let maxY = minY + canvas.clientHeight * 2;
-
-    let startX = Math.floor(minX / gridSize) * gridSize;
-    let startY = Math.floor(minY / gridSize) * gridSize;
-
-    ctx.save();
-    
     ctx.strokeStyle = "lightgray";
     ctx.lineWidth = 1;
 
-    for (let x = startX; x < maxX; x += gridSize) {
+    let startX = Math.floor(scrollOffset.x / gridSize) * gridSize;
+    let endX = scrollOffset.x + canvas.clientWidth;
+    let startY = Math.floor(scrollOffset.y / gridSize) * gridSize;
+    let endY = scrollOffset.y + canvas.clientHeight;
+
+    for (let x = startX; x <= endX; x += gridSize) {
         ctx.beginPath();
-        ctx.moveTo(x, minY);
-        ctx.lineTo(x, maxY);
+        ctx.moveTo(x, startY);
+        ctx.lineTo(x, endY);
         ctx.stroke();
     }
 
-    for (let y = startY; y < maxY; y += gridSize) {
+    for (let y = startY; y <= endY; y += gridSize) {
         ctx.beginPath();
-        ctx.moveTo(minX, y);
-        ctx.lineTo(maxX, y);
+        ctx.moveTo(startX, y);
+        ctx.lineTo(endX, y);
         ctx.stroke();
     }
-
-    ctx.restore();
 }
 
 function drawGame() {
