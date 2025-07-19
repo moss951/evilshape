@@ -1,7 +1,8 @@
-class RectServer {
+const ShapeServer = require('./shapeServer');
+
+class RectServer extends ShapeServer {
     constructor(x, y, w, h) {
-        this.x = x;
-        this.y = y;
+        super(x, y);
         this.w = w;
         this.h = h;
     }

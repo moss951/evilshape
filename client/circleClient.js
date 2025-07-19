@@ -1,8 +1,7 @@
-class RectClient extends ShapeClient {
-    constructor(x, y, w, h) {
+class CircleClient extends ShapeClient {
+    constructor(x, y, r) {
         super(x, y);
-        this.w = w;
-        this.h = h;
+        this.r = r;
     }
 
     draw() {
@@ -11,7 +10,7 @@ class RectClient extends ShapeClient {
         ctx.lineWidth = 2;
 
         ctx.beginPath();
-        ctx.rect(this.x, this.y, this.w, this.h);
+        ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
         ctx.stroke();
     }
 }

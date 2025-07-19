@@ -217,8 +217,6 @@ function drawGame() {
     let previousScrollOffset = { ...scrollOffset };
     updateScollOffset()
     socket.emit("cursorMoveRequest", { x:scrollOffset.x - previousScrollOffset.x, y:scrollOffset.y - previousScrollOffset.y});
-
-    if (paused) drawPauseMenu();
 }
 
 // inputs
@@ -305,7 +303,10 @@ socket.on('initGame', (gameData) => {
 
     // load level
     for (let i = 0; i < gameData.walls.length; i++) {
-        if (gameData.walls[i].h == 0) {
+        if (gameData.walls[i].h == undefined) {
+            level.walls.push(new CircleClient(gameData.walls[i].x, gameData.walls[i].y, gameData.walls[i].r));
+        }
+        else if (gameData.walls[i].h == 0) {
             level.walls.push(new FloorClient(gameData.walls[i].x, gameData.walls[i].y, gameData.walls[i].w));
         }
         else {

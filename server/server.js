@@ -16,9 +16,11 @@ const PlayerServer = require('./playerServer');
 const ParticleServer = require('./particleServer');
 const SpringServer = require('./springServer');
 const CursorParticleServer = require('./cursorParticleServer');
+const ShapeServer = require('./shapeServer');
 const RectServer = require('./rectServer');
 const LevelServer = require('./levelServer');
 const FloorServer = require('./floorServer');
+const CircleServer = require('./circleServer');
 
 const toxi = require('toxiclibsjs');
 const physics = new toxi.physics2d.VerletPhysics2D();
@@ -48,7 +50,6 @@ const level1 = new LevelServer(
     [
         new RectServer(0, 550, 1500, 50),
         new RectServer(0, -1500, 50, 2050),
-        new RectServer(1450, -1500, 50, 2050),
 
         new RectServer(200, 500, 50, 50),
         new RectServer(400, 150, 50, 300),
@@ -56,9 +57,11 @@ const level1 = new LevelServer(
         new RectServer(700, 50, 50, 400),
         new RectServer(350, 150, 50, 50),
 
-        new RectServer(750, 50, 50, 50),
+        new RectServer(800, 50, 50, 50),
         new RectServer(950, -50, 50, 50),
         new RectServer(750, -150, 50, 50),
+        new RectServer(1150, -600, 50, 1150),
+        new RectServer(1200, -600, 1000, 50),
 
         new RectServer(400, -150, 150, 50),
         new FloorServer(450, 450, 100),
@@ -67,6 +70,28 @@ const level1 = new LevelServer(
         new FloorServer(600, 350, 100),
         new FloorServer(600, 250, 100),
         new FloorServer(600, 150, 100),
+
+        new FloorServer(200, -150, 50),
+        new FloorServer(200, -300, 50),
+        new FloorServer(200, -450, 50),
+
+        new RectServer(250, -500, 100, 100),
+        new RectServer(500, -600, 500, 50),
+
+        new RectServer(650, -700, 50, 50),
+        new RectServer(750, -700, 50, 50),
+        new RectServer(850, -700, 50, 50),
+        new RectServer(600, -800, 50, 50),
+        new RectServer(700, -800, 50, 50),
+        new RectServer(800, -800, 50, 50),
+        new RectServer(900, -800, 50, 50),
+        new RectServer(550, -900, 50, 50),
+        new RectServer(650, -900, 50, 50),
+        new RectServer(750, -900, 50, 50),
+        new RectServer(850, -900, 300, 50),
+
+        new CircleServer(1300, -900, 50),
+        new CircleServer(300, 500, 50),
     ]
 );
 
@@ -234,7 +259,7 @@ function gameLoop() {
     physics.update();
 
     // wall collisions
-    for (let i = 0; i < particles.length; i++) {
+    for (let i = 0; i < particles.length; i += PARTICLES_ALONG_EDGE) {
         for (let j = 0; j < level1.walls.length; j++) {
             particles[i].handleCollision(level1.walls[j]);
         }
