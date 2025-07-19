@@ -259,7 +259,7 @@ function gameLoop() {
     physics.update();
 
     // wall collisions
-    for (let i = 0; i < particles.length; i++) {
+    for (let i = 0; i < particles.length; i += PARTICLES_ALONG_EDGE) {
         for (let j = 0; j < level1.walls.length; j++) {
             particles[i].handleCollision(level1.walls[j]);
         }
