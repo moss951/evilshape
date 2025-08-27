@@ -85,6 +85,12 @@ function drawMainMenu() {
 // lobby stuff
 let readyButton = new Button(300, 400, 200, 50, "ready");
 
+let levelIndex = 0;
+let levelButtons = [
+    new Button(550, 50, 150, 50, "level 1"),
+    new Button(550, 100, 150, 50, "level 2"),
+];
+
 function initLobby() {
     drawIntervalId = setInterval(drawLobby, 1000 / 60);
     socket.emit("lobbyPlayerListRequest");
@@ -95,7 +101,14 @@ function initLobby() {
 }
 
 function lobbyMouseDown(e) {
-    readyButton.isClicked(e.clientX - bounds.left, e.clientY - bounds.top);
+    let mouse = { x:e.clientX - bounds.left, y:e.clientY - bounds.top };
+    readyButton.isClicked(mouse.x, mouse.y);
+
+    for (let i = 0; i < levelButtons.length; i++) {
+        if (levelButtons[i].isClicked(mouse.x, mouse.y)) {
+            socket.emit("levelChangeRequest", i);
+        }
+    }
 }
 
 function lobbyMouseUp() {
@@ -132,6 +145,16 @@ function drawLobby() {
     if (ready) readyButton.text = "cancel";
     else readyButton.text = "ready";
     readyButton.draw();
+
+    for (let i = 0; i < levelButtons.length; i++) {
+        if (i == levelIndex) {
+            levelButtons[i].clicked = true;
+        } else {
+            levelButtons[i].clicked = false;
+        }
+
+        levelButtons[i].draw();
+    }
 }
 
 function returnLobby() {
@@ -418,6 +441,10 @@ socket.on('gameWin', () => {
     document.removeEventListener("focus", updateScollOffset);
     document.addEventListener("mousedown", winMouseDown);
     document.addEventListener("mouseup", winMouseUp);
+});
+
+socket.on('updateSelectedLevel', (index) => {
+    levelIndex = index;
 });
 
 initMainMenu();

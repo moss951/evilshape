@@ -46,54 +46,63 @@ let clientSprings = [];
 
 let inGame = false;
 let hasWon = false;
+let levelIndex = 0;
+let levels = [
+    new LevelServer(
+        { x:150, y:400 },
+        [
+            new RectServer(0, 550, 1200, 50),
+            new RectServer(0, -1500, 50, 2050),
 
-const level1 = new LevelServer(
-    { x:150, y:400 },
-    [
-        new RectServer(0, 550, 1200, 50),
-        new RectServer(0, -1500, 50, 2050),
+            new RectServer(200, 500, 50, 50),
+            new RectServer(400, 150, 50, 300),
+            new RectServer(550, 100, 50, 450),
+            new RectServer(700, 50, 50, 400),
+            new RectServer(350, 150, 50, 50),
 
-        new RectServer(200, 500, 50, 50),
-        new RectServer(400, 150, 50, 300),
-        new RectServer(550, 100, 50, 450),
-        new RectServer(700, 50, 50, 400),
-        new RectServer(350, 150, 50, 50),
+            new RectServer(800, 50, 50, 50),
+            new RectServer(950, -50, 50, 50),
+            new RectServer(750, -150, 50, 50),
+            new RectServer(1150, -1500, 50, 2050),
 
-        new RectServer(800, 50, 50, 50),
-        new RectServer(950, -50, 50, 50),
-        new RectServer(750, -150, 50, 50),
-        new RectServer(1150, -1500, 50, 2050),
+            new RectServer(400, -150, 150, 50),
+            new FloorServer(450, 450, 100),
+            new FloorServer(450, 300, 100),
+            new FloorServer(600, 450, 100),
+            new FloorServer(600, 350, 100),
+            new FloorServer(600, 250, 100),
+            new FloorServer(600, 150, 100),
 
-        new RectServer(400, -150, 150, 50),
-        new FloorServer(450, 450, 100),
-        new FloorServer(450, 300, 100),
-        new FloorServer(600, 450, 100),
-        new FloorServer(600, 350, 100),
-        new FloorServer(600, 250, 100),
-        new FloorServer(600, 150, 100),
+            new FloorServer(150, -150, 100),
+            new FloorServer(200, -300, 50),
+            new FloorServer(200, -450, 50),
 
-        new FloorServer(150, -150, 100),
-        new FloorServer(200, -300, 50),
-        new FloorServer(200, -450, 50),
+            new RectServer(250, -500, 100, 100),
+            new RectServer(500, -600, 500, 50),
 
-        new RectServer(250, -500, 100, 100),
-        new RectServer(500, -600, 500, 50),
-
-        new RectServer(650, -700, 50, 50),
-        new RectServer(750, -700, 50, 50),
-        new RectServer(850, -700, 50, 50),
-        new RectServer(600, -800, 50, 50),
-        new RectServer(700, -800, 50, 50),
-        new RectServer(800, -800, 50, 50),
-        new RectServer(900, -800, 50, 50),
-        new RectServer(550, -900, 50, 50),
-        new RectServer(650, -900, 50, 50),
-        new RectServer(750, -900, 50, 50),
-        new RectServer(850, -900, 300, 50),
-    ],
-    new FlagServer(1100, -950)
-    // new FlagServer(200, 500)
-);
+            new RectServer(650, -700, 50, 50),
+            new RectServer(750, -700, 50, 50),
+            new RectServer(850, -700, 50, 50),
+            new RectServer(600, -800, 50, 50),
+            new RectServer(700, -800, 50, 50),
+            new RectServer(800, -800, 50, 50),
+            new RectServer(900, -800, 50, 50),
+            new RectServer(550, -900, 50, 50),
+            new RectServer(650, -900, 50, 50),
+            new RectServer(750, -900, 50, 50),
+            new RectServer(850, -900, 300, 50),
+        ],
+        new FlagServer(1100, -950)
+        // new FlagServer(200, 500)
+    ),
+    new LevelServer(
+        { x:150, y:400 },
+        [ 
+            new RectServer(0, 550, 1200, 50),
+        ],
+        new FlagServer(300, 500)
+    ),
+];
 
 let loopId = setInterval(lobbyLoop, 1000 / 60);
 
@@ -156,6 +165,12 @@ io.on("connection", (socket) => {
         particles[players[socket.id].particleIndex].behaviors[0].attrStrength = cursorParticleNormalStrength;
         particles[players[socket.id].particleIndex].currentBoostTime = 0;
     });
+
+    socket.on("levelChangeRequest", (index) => {
+        console.log("level " + index + " selected");
+        levelIndex = index;
+        io.emit("updateSelectedLevel", levelIndex);
+    });
 });
 
 function getPolygonVertexCoords(numParticles, centerX, centerY, radiusX, radiusY) {
@@ -205,7 +220,7 @@ function lobbyLoop() {
     }
 
     // make particles
-    const particleCoords = getPolygonVertexCoords(numPlayers * PARTICLES_ALONG_EDGE, level1.spawnPos.x, level1.spawnPos.y, 50, 50);
+    const particleCoords = getPolygonVertexCoords(numPlayers * PARTICLES_ALONG_EDGE, levels[levelIndex].spawnPos.x, levels[levelIndex].spawnPos.y, 50, 50);
     for (let i = 0; i < particleCoords.length; i++) {
         particles.push(new ParticleServer(particleCoords[i].x, particleCoords[i].y, physics, i % PARTICLES_ALONG_EDGE == 0));
 
@@ -255,7 +270,7 @@ function lobbyLoop() {
     cursorParticleNormalStrength = -particles.length * 2;
     cursorParticleBoostStrength = cursorParticleNormalStrength * 2.5;
 
-    io.emit("initGame", { players:players, particles:clientParticles, springs:clientSprings, cursorParticles:clientCursorParticles, walls:level1.walls, flag:level1.flag });
+    io.emit("initGame", { players:players, particles:clientParticles, springs:clientSprings, cursorParticles:clientCursorParticles, walls:levels[levelIndex].walls, flag:levels[levelIndex].flag });
     loopId = setInterval(gameLoop, 1000 / 60);
 }
 
@@ -287,14 +302,14 @@ function gameLoop() {
 
     // wall collisions
     for (let i = 0; i < particles.length; i++) {
-        if (level1.flag.particleCollision(particles[i])) {
+        if (levels[levelIndex].flag.particleCollision(particles[i])) {
             hasWon = true;
             io.emit("gameWin");
             break;
         }
 
-        for (let j = 0; j < level1.walls.length; j++) {
-            particles[i].handleCollision(level1.walls[j]);
+        for (let j = 0; j < levels[levelIndex].walls.length; j++) {
+            particles[i].handleCollision(levels[levelIndex].walls[j]);
         }
     }
 
