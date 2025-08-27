@@ -63,7 +63,7 @@ function drawMainMenu() {
 
     ctx.font ="128px DS-BIOS";
     ctx.fillStyle = "black";
-    ctx.fillText("EVIL SHAPE", canvas.clientWidth / 2 - ctx.measureText("EVIL SHAPE").width / 2, canvas.clientHeight / 3);
+    ctx.fillText("evil shape", canvas.clientWidth / 2 - ctx.measureText("evil shape").width / 2, canvas.clientHeight / 3);
     playButton.draw();
 
     // username input

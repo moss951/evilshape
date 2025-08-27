@@ -4,8 +4,9 @@ class FlagClient extends CircleClient {
     }
 
     draw() {
+        ctx.setLineDash([5, 5]);
         ctx.beginPath();
-        ctx.strokeStyle = "green";
+        ctx.strokeStyle = "limegreen";
         ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
         ctx.stroke();
     }
