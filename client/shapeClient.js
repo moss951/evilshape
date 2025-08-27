@@ -1,5 +1,5 @@
 class ShapeClient {
-    constructor(x, y, type) {
+    constructor(x, y) {
         this.x = x;
         this.y = y;
     }

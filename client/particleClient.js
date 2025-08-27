@@ -19,6 +19,7 @@ class ParticleClient {
 
         if (!this.isPlayer) return;
 
+        ctx.fillStyle = "black";
         ctx.font ="24px DS-BIOS";
 
         if (this.usernameOffset == undefined) {

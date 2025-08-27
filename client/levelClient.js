@@ -1,11 +1,14 @@
 class LevelClient {
-    constructor(walls) {
-        this.walls = walls;
+    constructor() {
+        this.walls = [];
+        this.flag = undefined;
     }
 
     draw(offset) {
         for (let i = 0; i < this.walls.length; i++) {
             this.walls[i].draw(offset);
         }
+
+        this.flag.draw(offset);
     }
 }

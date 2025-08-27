@@ -2,7 +2,7 @@ const ShapeServer = require("./shapeServer");
 
 class CircleServer extends ShapeServer {
     constructor(x, y, r) {
-        super(x, y);
+        super(x, y, "circle");
         this.r = r;
     }
 

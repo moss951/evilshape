@@ -6,14 +6,15 @@ const socket = io();
 const PARTICLES_ALONG_EDGE = 2;
 let ready = false;
 let inGame = false;
+let hasWon = false;
 
-const players = {};
-const usernames = [];
-const particles = [];
-const springs = [];
-const cursorParticles = [];
-const level = new LevelClient([]);
-const scrollOffset = { x:0, y:0 };
+let players = {};
+let usernames = [];
+let particles = [];
+let springs = [];
+let cursorParticles = [];
+let level = new LevelClient();
+let scrollOffset = { x:0, y:0 };
 
 let playerParticle, playerCursorParticle;
 let drawIntervalId;
@@ -94,14 +95,15 @@ function initLobby() {
 }
 
 function lobbyMouseDown(e) {
-    if (readyButton.isClicked(e.clientX - bounds.left, e.clientY - bounds.top)) {
-        ready = !ready;
-        socket.emit("ready", ready);
-    }
+    readyButton.isClicked(e.clientX - bounds.left, e.clientY - bounds.top);
 }
 
 function lobbyMouseUp() {
-    readyButton.clicked = false;
+    if (readyButton.clicked) {
+        readyButton.clicked = false;
+        ready = !ready;
+        socket.emit("ready", ready);
+    }
 }
 
 function drawLobby() {
@@ -123,7 +125,6 @@ function drawLobby() {
             if (socket.id != id) playerString += " - in game";
         }
 
-        ctx.fillStyle = "black";
         ctx.fillText(playerString, 50, 48 + 48 * i + 64 + 25);
         i++;
     }
@@ -131,6 +132,60 @@ function drawLobby() {
     if (ready) readyButton.text = "cancel";
     else readyButton.text = "ready";
     readyButton.draw();
+}
+
+function returnLobby() {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+    ready = false;
+    inGame = false;
+    hasWon = false;
+
+    players = {};
+    usernames = [];
+    particles = [];
+    springs = [];
+    cursorParticles = [];
+    level = new LevelClient();
+    scrollOffset = { x:0, y:0 };
+
+    playerParticle = undefined;
+    playerCursorParticle = undefined;
+
+    clearInterval(drawIntervalId);
+    initLobby();
+}
+
+// win stuff
+let lobbyButton = new Button(300, 350, 200, 50, "lobby")
+
+function drawWin() {
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+    ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
+    ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+    ctx.font ="128px DS-BIOS";
+    ctx.fillStyle = "black";
+    ctx.fillText("yurr", canvas.clientWidth / 2 - ctx.measureText("yurr").width / 2, canvas.clientHeight / 3 + 50);
+
+    lobbyButton.draw();
+
+    ctx.restore();
+}
+
+function winMouseDown(e) {
+    lobbyButton.isClicked(e.clientX - bounds.left, e.clientY - bounds.top);
+}
+
+function winMouseUp() {
+    if (lobbyButton.clicked) {
+        document.removeEventListener("mousedown", winMouseDown);
+        document.removeEventListener("mouseup", winMouseUp);
+        lobbyButton.clicked = false;
+        returnLobby();
+    }
 }
 
 // in game stuff
@@ -206,8 +261,10 @@ function drawGame() {
 
     // scroll
     let previousScrollOffset = { ...scrollOffset };
-    updateScollOffset()
+    updateScollOffset();
     socket.emit("cursorMoveRequest", { x:scrollOffset.x - previousScrollOffset.x, y:scrollOffset.y - previousScrollOffset.y});
+
+    if (hasWon) drawWin();
 }
 
 // inputs
@@ -293,14 +350,16 @@ socket.on('initGame', (gameData) => {
     }
 
     // load level
+    level.flag = new FlagClient(gameData.flag.x, gameData.flag.y);
+
     for (let i = 0; i < gameData.walls.length; i++) {
-        if (gameData.walls[i].h == undefined) {
+        if (gameData.walls[i].type == "circle") {
             level.walls.push(new CircleClient(gameData.walls[i].x, gameData.walls[i].y, gameData.walls[i].r));
         }
-        else if (gameData.walls[i].h == 0) {
+        else if (gameData.walls[i].type == "floor") {
             level.walls.push(new FloorClient(gameData.walls[i].x, gameData.walls[i].y, gameData.walls[i].w));
         }
-        else {
+        else if (gameData.walls[i].type == "rect") {
             level.walls.push(new RectClient(gameData.walls[i].x, gameData.walls[i].y, gameData.walls[i].w, gameData.walls[i].h));
         }
     }
@@ -328,12 +387,12 @@ socket.on('initGame', (gameData) => {
     document.addEventListener("focus", updateScollOffset);
 
     // debug controls
-    document.addEventListener("keydown", (e) => {
-        if (e.key == "s") ctx.translate(0, -25);
-        if (e.key == "w") ctx.translate(0, 25);
-        if (e.key == "d") ctx.translate(-25, 0);
-        if (e.key == "a") ctx.translate(25, 0);
-    });
+    // document.addEventListener("keydown", (e) => {
+    //     if (e.key == "s") ctx.translate(0, -25);
+    //     if (e.key == "w") ctx.translate(0, 25);
+    //     if (e.key == "d") ctx.translate(-25, 0);
+    //     if (e.key == "a") ctx.translate(25, 0);
+    // });
 });
 
 socket.on('updateGame', (gameData) => {
@@ -348,6 +407,17 @@ socket.on('updateGame', (gameData) => {
         cursorParticles[i].x = gameData.cursorParticles[i].x;
         cursorParticles[i].y = gameData.cursorParticles[i].y;
     }
+});
+
+socket.on('gameWin', () => {
+    hasWon = true;
+    document.exitPointerLock();
+    document.removeEventListener("mousemove", inGameMouseMove);
+    document.removeEventListener("mousedown", inGameMouseDown);
+    document.removeEventListener("mouseup", inGameMouseUp);
+    document.removeEventListener("focus", updateScollOffset);
+    document.addEventListener("mousedown", winMouseDown);
+    document.addEventListener("mouseup", winMouseUp);
 });
 
 initMainMenu();

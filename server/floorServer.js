@@ -3,6 +3,7 @@ const RectServer = require('./rectServer');
 class FloorServer extends RectServer {
     constructor(x, y, w) {
         super(x, y, w, 0);
+        this.type = "floor";
     }
 
     particleCollision(particle) {

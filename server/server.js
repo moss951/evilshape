@@ -21,6 +21,7 @@ const RectServer = require('./rectServer');
 const LevelServer = require('./levelServer');
 const FloorServer = require('./floorServer');
 const CircleServer = require('./circleServer');
+const FlagServer = require('./flagServer');
 
 const toxi = require('toxiclibsjs');
 const physics = new toxi.physics2d.VerletPhysics2D();
@@ -44,11 +45,12 @@ let clientCursorParticles = [];
 let clientSprings = [];
 
 let inGame = false;
+let hasWon = false;
 
 const level1 = new LevelServer(
     { x:150, y:400 },
     [
-        new RectServer(0, 550, 1500, 50),
+        new RectServer(0, 550, 1200, 50),
         new RectServer(0, -1500, 50, 2050),
 
         new RectServer(200, 500, 50, 50),
@@ -60,8 +62,7 @@ const level1 = new LevelServer(
         new RectServer(800, 50, 50, 50),
         new RectServer(950, -50, 50, 50),
         new RectServer(750, -150, 50, 50),
-        new RectServer(1150, -600, 50, 1150),
-        new RectServer(1200, -600, 1000, 50),
+        new RectServer(1150, -1500, 50, 2050),
 
         new RectServer(400, -150, 150, 50),
         new FloorServer(450, 450, 100),
@@ -71,7 +72,7 @@ const level1 = new LevelServer(
         new FloorServer(600, 250, 100),
         new FloorServer(600, 150, 100),
 
-        new FloorServer(200, -150, 50),
+        new FloorServer(150, -150, 100),
         new FloorServer(200, -300, 50),
         new FloorServer(200, -450, 50),
 
@@ -89,10 +90,9 @@ const level1 = new LevelServer(
         new RectServer(650, -900, 50, 50),
         new RectServer(750, -900, 50, 50),
         new RectServer(850, -900, 300, 50),
-
-        new CircleServer(1300, -900, 50),
-        new CircleServer(300, 500, 50),
-    ]
+    ],
+    new FlagServer(1100, -950)
+    // new FlagServer(200, 500)
 );
 
 let loopId = setInterval(lobbyLoop, 1000 / 60);
@@ -167,6 +167,28 @@ function getPolygonVertexCoords(numParticles, centerX, centerY, radiusX, radiusY
     return vertexCoords;
 }
 
+function returnLobby() {
+    players = {};
+    particles = [];
+    cursorParticles = [];
+    springs = [];
+
+    clientParticles = []
+    clientCursorParticles = [];
+    clientSprings = [];
+
+    inGame = false;
+    hasWon = false;
+
+    for (let id in lobbyPlayers) {
+        lobbyPlayers[id].ready = false;
+    }
+    io.emit('updatePlayerList', lobbyPlayers);
+
+    clearInterval(loopId);
+    loopId = setInterval(lobbyLoop, 1000 / 60);
+}
+
 function lobbyLoop() {
     if (numPlayers == 0) return;
     for (let id in lobbyPlayers) {
@@ -233,11 +255,16 @@ function lobbyLoop() {
     cursorParticleNormalStrength = -particles.length * 2;
     cursorParticleBoostStrength = cursorParticleNormalStrength * 2.5;
 
-    io.emit("initGame", { players:players, particles:clientParticles, springs:clientSprings, cursorParticles:clientCursorParticles, walls:level1.walls });
+    io.emit("initGame", { players:players, particles:clientParticles, springs:clientSprings, cursorParticles:clientCursorParticles, walls:level1.walls, flag:level1.flag });
     loopId = setInterval(gameLoop, 1000 / 60);
 }
 
 function gameLoop() {
+    if (hasWon) {
+        returnLobby();
+        return;
+    }
+
     // save position
     for (let i = 0; i < particles.length; i++) {
         particles[i].previousX = particles[i].x;
@@ -260,6 +287,12 @@ function gameLoop() {
 
     // wall collisions
     for (let i = 0; i < particles.length; i++) {
+        if (level1.flag.particleCollision(particles[i])) {
+            hasWon = true;
+            io.emit("gameWin");
+            break;
+        }
+
         for (let j = 0; j < level1.walls.length; j++) {
             particles[i].handleCollision(level1.walls[j]);
         }
@@ -279,6 +312,7 @@ function gameLoop() {
 
     io.emit("updateGame", { particles:clientParticles, cursorParticles:clientCursorParticles });
 
+    // reset server when all players disconnected
     if (numPlayers == 0) {
         clearInterval(loopId);
         lobbyPlayers = {};
@@ -290,6 +324,7 @@ function gameLoop() {
         clientCursorParticles = [];
         clientSprings = [];
         inGame = false;
+        hasWon = false;
         loopId = setInterval(lobbyLoop, 1000 / 60);
     }
 }
