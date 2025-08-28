@@ -166,6 +166,10 @@ io.on("connection", (socket) => {
         particles[players[socket.id].particleIndex].currentBoostTime = 0;
     });
 
+    socket.on("levelRequest", () => {
+        io.emit("updateSelectedLevel", levelIndex);
+    });
+
     socket.on("levelChangeRequest", (index) => {
         console.log("level " + index + " selected");
         levelIndex = index;

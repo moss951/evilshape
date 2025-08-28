@@ -95,6 +95,7 @@ function initLobby() {
     drawIntervalId = setInterval(drawLobby, 1000 / 60);
     socket.emit("lobbyPlayerListRequest");
     socket.emit("gameStateRequest");
+    socket.emit("levelRequest");
 
     document.addEventListener("mousedown", lobbyMouseDown);
     document.addEventListener("mouseup", lobbyMouseUp);
