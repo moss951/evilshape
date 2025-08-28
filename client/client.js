@@ -1,7 +1,7 @@
 const canvas = document.getElementById("game");
 const bounds = canvas.getBoundingClientRect();
 const ctx = canvas.getContext("2d");
-const socket = io();
+let socket;
 
 const PARTICLES_ALONG_EDGE = 2;
 let ready = false;
@@ -41,13 +41,15 @@ function typeUsername(e) {
 }
 
 function mainMenuMouseDown(e) {
-    if (playButton.isClicked(e.clientX - bounds.left, e.clientY - bounds.top)) {}
+    playButton.isClicked(e.clientX - bounds.left, e.clientY - bounds.top);
 }
 
 function mainMenuMouseUp() {
     playButton.clicked = false;
 
     if (username.length > 0) {
+        socket = io();
+        initSocketListeners();
         socket.emit("join", { username });
         document.removeEventListener("keydown", typeUsername);
         document.removeEventListener("mousedown", mainMenuMouseDown);
@@ -107,7 +109,10 @@ function lobbyMouseDown(e) {
 
     for (let i = 0; i < levelButtons.length; i++) {
         if (levelButtons[i].isClicked(mouse.x, mouse.y)) {
-            socket.emit("levelChangeRequest", i);
+            socket.emit("gameStateRequest");
+            if (!inGame) {
+                socket.emit("levelChangeRequest", i);
+            }
         }
     }
 }
@@ -128,6 +133,7 @@ function drawLobby() {
     ctx.font = "64px DS-BIOS";
     ctx.fillText("Players", 50, ctx.measureText("Players").actualBoundingBoxAscent + ctx.measureText("Players").actualBoundingBoxDescent + 50);
 
+    socket.emit("gameStateRequest");
     ctx.font = "48px DS-BIOS";
     let i = 0;
     for (let id in players) {
@@ -312,140 +318,142 @@ function inGameMouseUp() {
 }
 
 // server stuff
-socket.on('updatePlayerList', (serverPlayers) => {
-    let playersFound = {};
+function initSocketListeners() {
+    socket.on('updatePlayerList', (serverPlayers) => {
+        let playersFound = {};
 
-    for (let id in serverPlayers) {
-        if (players[id] == undefined) {
-            players[id] = new PlayerClient(serverPlayers[id].username, serverPlayers[id].ready);
-        }
-        
-        playersFound[id] = true;
-    }
-
-    for (let id in players) {
-        if (!playersFound[id]) delete players[id];
-    }
-});
-
-socket.on('updatePlayerReady', (playerData) => {
-    players[playerData.id].ready = playerData.ready;
-});
-
-socket.on("updateGameState", (state) => {
-    inGame = state;
-});
-
-socket.on('initGame', (gameData) => {
-    clearInterval(drawIntervalId);
-    document.removeEventListener("mousedown", lobbyMouseDown);
-    document.removeEventListener("mouseup", lobbyMouseUp);
-
-    for (let id in gameData.players) {
-        players[id].particleIndex = gameData.players[id].particleIndex;
-        players[id].cursorParticleIndex = gameData.players[id].cursorParticleIndex;
-    }
-
-    // make particles
-    for (let i = 0; i < gameData.particles.length; i++) {
-        particles.push(new ParticleClient(gameData.particles[i].x, gameData.particles[i].y, gameData.particles[i].isPlayer));
-    }
-
-    for (let i = 0; i < gameData.cursorParticles.length; i++) {
-        cursorParticles.push(new CursorParticleClient(gameData.cursorParticles[i].x, gameData.cursorParticles[i].y, gameData.cursorParticles[i].attractionRadius));
-    }
-
-    playerParticle = particles[players[socket.id].particleIndex];
-    playerCursorParticle = cursorParticles[players[socket.id].cursorParticleIndex];
-
-    // make springs
-    for (let i = 0; i < gameData.springs.length; i++) {
-        let particle1, particle2;
-        for (let j = 0; j < particles.length; j++) {
-            if (gameData.springs[i].particle1.x == particles[j].x && gameData.springs[i].particle1.y == particles[j].y) {
-                particle1 = particles[j];
+        for (let id in serverPlayers) {
+            if (players[id] == undefined) {
+                players[id] = new PlayerClient(serverPlayers[id].username, serverPlayers[id].ready);
             }
-
-            if (gameData.springs[i].particle2.x == particles[j].x && gameData.springs[i].particle2.y == particles[j].y) {
-                particle2 = particles[j];
-            }
+            
+            playersFound[id] = true;
         }
-        springs.push(new SpringClient(particle1, particle2));
-    }
 
-    // load level
-    level.flag = new FlagClient(gameData.flag.x, gameData.flag.y);
-
-    for (let i = 0; i < gameData.walls.length; i++) {
-        if (gameData.walls[i].type == "circle") {
-            level.walls.push(new CircleClient(gameData.walls[i].x, gameData.walls[i].y, gameData.walls[i].r));
-        }
-        else if (gameData.walls[i].type == "floor") {
-            level.walls.push(new FloorClient(gameData.walls[i].x, gameData.walls[i].y, gameData.walls[i].w));
-        }
-        else if (gameData.walls[i].type == "rect") {
-            level.walls.push(new RectClient(gameData.walls[i].x, gameData.walls[i].y, gameData.walls[i].w, gameData.walls[i].h));
-        }
-    }
-
-    // get usernames from dictionary in array
-    for (let i = 0; i < particles.length; i++) {
         for (let id in players) {
-            if (i == players[id].particleIndex) {
-                usernames.push(players[id].username);
-                continue;
+            if (!playersFound[id]) delete players[id];
+        }
+    });
+
+    socket.on('updatePlayerReady', (playerData) => {
+        players[playerData.id].ready = playerData.ready;
+    });
+
+    socket.on("updateGameState", (state) => {
+        inGame = state;
+    });
+
+    socket.on('initGame', (gameData) => {
+        clearInterval(drawIntervalId);
+        document.removeEventListener("mousedown", lobbyMouseDown);
+        document.removeEventListener("mouseup", lobbyMouseUp);
+
+        for (let id in gameData.players) {
+            players[id].particleIndex = gameData.players[id].particleIndex;
+            players[id].cursorParticleIndex = gameData.players[id].cursorParticleIndex;
+        }
+
+        // make particles
+        for (let i = 0; i < gameData.particles.length; i++) {
+            particles.push(new ParticleClient(gameData.particles[i].x, gameData.particles[i].y, gameData.particles[i].isPlayer));
+        }
+
+        for (let i = 0; i < gameData.cursorParticles.length; i++) {
+            cursorParticles.push(new CursorParticleClient(gameData.cursorParticles[i].x, gameData.cursorParticles[i].y, gameData.cursorParticles[i].attractionRadius));
+        }
+
+        playerParticle = particles[players[socket.id].particleIndex];
+        playerCursorParticle = cursorParticles[players[socket.id].cursorParticleIndex];
+
+        // make springs
+        for (let i = 0; i < gameData.springs.length; i++) {
+            let particle1, particle2;
+            for (let j = 0; j < particles.length; j++) {
+                if (gameData.springs[i].particle1.x == particles[j].x && gameData.springs[i].particle1.y == particles[j].y) {
+                    particle1 = particles[j];
+                }
+
+                if (gameData.springs[i].particle2.x == particles[j].x && gameData.springs[i].particle2.y == particles[j].y) {
+                    particle2 = particles[j];
+                }
+            }
+            springs.push(new SpringClient(particle1, particle2));
+        }
+
+        // load level
+        level.flag = new FlagClient(gameData.flag.x, gameData.flag.y);
+
+        for (let i = 0; i < gameData.walls.length; i++) {
+            if (gameData.walls[i].type == "circle") {
+                level.walls.push(new CircleClient(gameData.walls[i].x, gameData.walls[i].y, gameData.walls[i].r));
+            }
+            else if (gameData.walls[i].type == "floor") {
+                level.walls.push(new FloorClient(gameData.walls[i].x, gameData.walls[i].y, gameData.walls[i].w));
+            }
+            else if (gameData.walls[i].type == "rect") {
+                level.walls.push(new RectClient(gameData.walls[i].x, gameData.walls[i].y, gameData.walls[i].w, gameData.walls[i].h));
             }
         }
-    }
 
-    // init cursor pos
-    socket.emit("cursorResetPosRequest", { x:playerParticle.x, y:playerParticle.y });
-    canvas.requestPointerLock();
+        // get usernames from dictionary in array
+        for (let i = 0; i < particles.length; i++) {
+            for (let id in players) {
+                if (i == players[id].particleIndex) {
+                    usernames.push(players[id].username);
+                    continue;
+                }
+            }
+        }
 
-    // start game and inputs
-    drawIntervalId = setInterval(drawGame, 1000 / 60);
+        // init cursor pos
+        socket.emit("cursorResetPosRequest", { x:playerParticle.x, y:playerParticle.y });
+        canvas.requestPointerLock();
 
-    document.addEventListener("mousemove", inGameMouseMove);
-    document.addEventListener("mousedown", inGameMouseDown);
-    document.addEventListener("mouseup", inGameMouseUp);
-    document.addEventListener("focus", updateScollOffset);
+        // start game and inputs
+        drawIntervalId = setInterval(drawGame, 1000 / 60);
 
-    // debug controls
-    // document.addEventListener("keydown", (e) => {
-    //     if (e.key == "s") ctx.translate(0, -25);
-    //     if (e.key == "w") ctx.translate(0, 25);
-    //     if (e.key == "d") ctx.translate(-25, 0);
-    //     if (e.key == "a") ctx.translate(25, 0);
-    // });
-});
+        document.addEventListener("mousemove", inGameMouseMove);
+        document.addEventListener("mousedown", inGameMouseDown);
+        document.addEventListener("mouseup", inGameMouseUp);
+        document.addEventListener("focus", updateScollOffset);
 
-socket.on('updateGame', (gameData) => {
-    // update particles
-    for (let i = 0; i < particles.length; i++) {
-        particles[i].x = gameData.particles[i].x;
-        particles[i].y = gameData.particles[i].y;
-        particles[i].currentBoostTime = gameData.particles[i].currentBoostTime;
-    }
+        // debug controls
+        // document.addEventListener("keydown", (e) => {
+        //     if (e.key == "s") ctx.translate(0, -25);
+        //     if (e.key == "w") ctx.translate(0, 25);
+        //     if (e.key == "d") ctx.translate(-25, 0);
+        //     if (e.key == "a") ctx.translate(25, 0);
+        // });
+    });
 
-    for (let i = 0; i < cursorParticles.length; i++) {
-        cursorParticles[i].x = gameData.cursorParticles[i].x;
-        cursorParticles[i].y = gameData.cursorParticles[i].y;
-    }
-});
+    socket.on('updateGame', (gameData) => {
+        // update particles
+        for (let i = 0; i < particles.length; i++) {
+            particles[i].x = gameData.particles[i].x;
+            particles[i].y = gameData.particles[i].y;
+            particles[i].currentBoostTime = gameData.particles[i].currentBoostTime;
+        }
 
-socket.on('gameWin', () => {
-    hasWon = true;
-    document.exitPointerLock();
-    document.removeEventListener("mousemove", inGameMouseMove);
-    document.removeEventListener("mousedown", inGameMouseDown);
-    document.removeEventListener("mouseup", inGameMouseUp);
-    document.removeEventListener("focus", updateScollOffset);
-    document.addEventListener("mousedown", winMouseDown);
-    document.addEventListener("mouseup", winMouseUp);
-});
+        for (let i = 0; i < cursorParticles.length; i++) {
+            cursorParticles[i].x = gameData.cursorParticles[i].x;
+            cursorParticles[i].y = gameData.cursorParticles[i].y;
+        }
+    });
 
-socket.on('updateSelectedLevel', (index) => {
-    levelIndex = index;
-});
+    socket.on('gameWin', () => {
+        hasWon = true;
+        document.exitPointerLock();
+        document.removeEventListener("mousemove", inGameMouseMove);
+        document.removeEventListener("mousedown", inGameMouseDown);
+        document.removeEventListener("mouseup", inGameMouseUp);
+        document.removeEventListener("focus", updateScollOffset);
+        document.addEventListener("mousedown", winMouseDown);
+        document.addEventListener("mouseup", winMouseUp);
+    });
+
+    socket.on('updateSelectedLevel', (index) => {
+        levelIndex = index;
+    });
+}
 
 initMainMenu();
