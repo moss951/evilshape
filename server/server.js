@@ -184,6 +184,19 @@ io.on("connection", (socket) => {
     });
 });
 
+// https://mika-s.github.io/javascript/colors/hsl/2017/12/05/generating-random-colors-in-javascript.html
+function generateHslaColors (saturation, lightness, alpha, amount) {
+    let colors = [];
+    let huedelta = Math.trunc(360 / amount);
+
+    for (let i = 0; i < amount; i++) {
+    let hue = i * huedelta;
+    colors.push(`hsla(${hue},${saturation}%,${lightness}%,${alpha})`);
+    }
+
+    return colors;
+}
+
 function getPolygonVertexCoords(numParticles, centerX, centerY, radiusX, radiusY) {
     const angle = 2 * Math.PI / numParticles;
     let vertexCoords = [];
@@ -226,6 +239,9 @@ function lobbyLoop() {
     inGame = true;
     numInGamePlayers = numPlayers;
 
+    // make colors
+    let colors = generateHslaColors(100, 50, 0.1, numInGamePlayers);
+
     // make players
     for (let id in lobbyPlayers) {
         lobbyPlayers[id].ready = false;
@@ -233,14 +249,13 @@ function lobbyLoop() {
     }
 
     // make particles
-    const particleCoords = getPolygonVertexCoords(numPlayers * PARTICLES_ALONG_EDGE, levels[levelIndex].spawnPos.x, levels[levelIndex].spawnPos.y, 50, 50);
+    const particleCoords = getPolygonVertexCoords(numInGamePlayers * PARTICLES_ALONG_EDGE, levels[levelIndex].spawnPos.x, levels[levelIndex].spawnPos.y, 50, 50);
     for (let i = 0; i < particleCoords.length; i++) {
-        particles.push(new ParticleServer(particleCoords[i].x, particleCoords[i].y, physics, i % PARTICLES_ALONG_EDGE == 0));
-
+        particles.push(new ParticleServer(particleCoords[i].x, particleCoords[i].y, physics, i % PARTICLES_ALONG_EDGE == 0, i % PARTICLES_ALONG_EDGE == 0 ? colors[i / PARTICLES_ALONG_EDGE] : "hsla(0,100%,0%,0.1)"));
     }
 
-    for (let i = 0; i < numPlayers; i++) {
-        cursorParticles.push(new CursorParticleServer(0, 0, 50, cursorParticleNormalStrength, particles[i * PARTICLES_ALONG_EDGE], physics));
+    for (let i = 0; i < numInGamePlayers; i++) {
+        cursorParticles.push(new CursorParticleServer(0, 0, 50, cursorParticleNormalStrength, particles[i * PARTICLES_ALONG_EDGE], physics, colors[i]));
     }
 
     let i1 = 0, i2 = 0;
@@ -268,11 +283,12 @@ function lobbyLoop() {
 
     // make sendable objects
     for (let i = 0; i < particles.length; i++) {
-        clientParticles.push({ x:particles[i].x, y:particles[i].y, isPlayer:particles[i].isPlayer, currentBoostTime:particles[i].currentBoostTime });
+        console.log(particles[i].color);
+        clientParticles.push({ x:particles[i].x, y:particles[i].y, isPlayer:particles[i].isPlayer, currentBoostTime:particles[i].currentBoostTime, color:particles[i].color });
     }
 
     for (let i = 0; i < cursorParticles.length; i++) {
-        clientCursorParticles.push({ x:cursorParticles[i].x, y:cursorParticles[i].y, attractionRadius:cursorParticles[i].attractionRadius });
+        clientCursorParticles.push({ x:cursorParticles[i].x, y:cursorParticles[i].y, attractionRadius:cursorParticles[i].attractionRadius, color:cursorParticles[i].color });
     }
 
     for (let i = 0; i < springs.length; i++) {

@@ -355,11 +355,11 @@ function initSocketListeners() {
 
         // make particles
         for (let i = 0; i < gameData.particles.length; i++) {
-            particles.push(new ParticleClient(gameData.particles[i].x, gameData.particles[i].y, gameData.particles[i].isPlayer));
+            particles.push(new ParticleClient(gameData.particles[i].x, gameData.particles[i].y, gameData.particles[i].isPlayer, gameData.particles[i].color));
         }
 
         for (let i = 0; i < gameData.cursorParticles.length; i++) {
-            cursorParticles.push(new CursorParticleClient(gameData.cursorParticles[i].x, gameData.cursorParticles[i].y, gameData.cursorParticles[i].attractionRadius));
+            cursorParticles.push(new CursorParticleClient(gameData.cursorParticles[i].x, gameData.cursorParticles[i].y, gameData.cursorParticles[i].attractionRadius, gameData.cursorParticles[i].color));
         }
 
         playerParticle = particles[players[socket.id].particleIndex];

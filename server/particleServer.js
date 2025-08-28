@@ -1,13 +1,14 @@
 const toxi = require('toxiclibsjs');
 
 class ParticleServer extends toxi.physics2d.VerletParticle2D {
-    constructor(x, y, physics, isPlayer) {
+    constructor(x, y, physics, isPlayer, color) {
         super(x, y);
         this.r = 8;
         this.previousX = x;
         this.previousY = y;
         this.currentBoostTime = 0;
         this.isPlayer = isPlayer;
+        this.color = color;
 
         physics.addParticle(this);
     }

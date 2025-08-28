@@ -1,5 +1,5 @@
 class ParticleClient {
-    constructor(x, y, isPlayer) {
+    constructor(x, y, isPlayer, color) {
         this.x = x;
         this.y = y;
         this.r = 8;
@@ -8,6 +8,8 @@ class ParticleClient {
         this.isPlayer = isPlayer;
         this.lineDashOffset = 0;
         this.rotateSpeed = -0.5;
+        this.color = color;
+        this.opaqueColor = this.color.replace(/,\s*([\d.]+)%/, ",75%").replace(/([\d.]+)\)$/, "1)");
     }
 
     draw(username = "") {
@@ -15,7 +17,7 @@ class ParticleClient {
         this.lineDashOffset += this.rotateSpeed;
         ctx.lineDashOffset = this.lineDashOffset;
 
-        ctx.strokeStyle = "black";
+        ctx.strokeStyle = this.opaqueColor;
         ctx.lineWidth = 2;
 
         ctx.beginPath();
@@ -24,21 +26,10 @@ class ParticleClient {
 
         ctx.lineDashOffset = 0;
 
-        ctx.fillStyle = "black";
+        ctx.fillStyle = this.color;
 
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.r / 2, 0, 2 * Math.PI);
+        ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
         ctx.fill();
-
-        if (!this.isPlayer) return;
-
-        ctx.fillStyle = "black";
-        ctx.font ="24px DS-BIOS";
-
-        if (this.usernameOffset == undefined) {
-            this.usernameOffset = ctx.measureText(username).width / 2;
-        }
-
-        ctx.fillText(username, this.x - this.usernameOffset, this.y - 30);
     }
 }

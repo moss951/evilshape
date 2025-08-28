@@ -7,11 +7,16 @@ class RectClient extends ShapeClient {
 
     draw() {
         ctx.setLineDash([]);
-        ctx.strokeStyle = "black";
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = "gray";
+        ctx.lineWidth = 1;
 
         ctx.beginPath();
         ctx.rect(this.x, this.y, this.w, this.h);
         ctx.stroke();
+
+        ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+        ctx.beginPath();
+        ctx.rect(this.x, this.y, this.w, this.h);
+        ctx.fill();
     }
 }
