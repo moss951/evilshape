@@ -107,8 +107,8 @@ let lobbyPhysics = new toxi.physics2d.VerletPhysics2D();
 let lobbyCursor = new UICursorParticle(-100, 0, 50, -5, lobbyPhysics);
 let readyButton = new Button(300, 400, 200, 50, "ready", lobbyPhysics);
 let levelButtons = [
-    new Button(550, 50, 150, 50, "level 1", lobbyPhysics),
-    new Button(550, 100, 150, 50, "level 2", lobbyPhysics),
+    new Button(550, 50, 150, 50, "rage quite", lobbyPhysics),
+    new Button(550, 100, 150, 50, "test", lobbyPhysics),
 ];
 let levelIndex = 0;
 
