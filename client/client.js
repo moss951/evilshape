@@ -22,13 +22,16 @@ let drawIntervalId;
 // main menu stuff
 let cursorInputTimer = 0;
 let username = "";
-let playButton = new Button(300, 400, 200, 50, "play");
+let mainMenuPhysics = new toxi.physics2d.VerletPhysics2D();
+let playButton = new Button(300, 400, 200, 50, "play", mainMenuPhysics);
+let mainMenuCursor = new UICursorParticle(-100, 0, 50, -5, mainMenuPhysics);
 
 function initMainMenu() {
     drawIntervalId = setInterval(drawMainMenu, 1000 / 60);
     document.addEventListener("keydown", typeUsername);
     document.addEventListener("mousedown", mainMenuMouseDown);
     document.addEventListener("mouseup", mainMenuMouseUp);
+    document.addEventListener("mousemove", mainMenuMouseMove);
 }
 
 function typeUsername(e) {
@@ -40,26 +43,36 @@ function typeUsername(e) {
     }
 }
 
+function mainMenuMouseMove(e) {
+    mainMenuCursor.x = e.clientX - bounds.left;
+    mainMenuCursor.y = e.clientY - bounds.top;
+}
+
 function mainMenuMouseDown(e) {
+    mainMenuCursor.pressed = true;
     playButton.isClicked(e.clientX - bounds.left, e.clientY - bounds.top);
 }
 
 function mainMenuMouseUp() {
-    playButton.clicked = false;
-
-    if (username.length > 0) {
-        socket = io();
-        initSocketListeners();
-        socket.emit("join", { username });
-        document.removeEventListener("keydown", typeUsername);
-        document.removeEventListener("mousedown", mainMenuMouseDown);
-        document.removeEventListener("mouseup", mainMenuMouseUp);
-        clearInterval(drawIntervalId);
-        initLobby();
+    mainMenuCursor.pressed = false;
+    if (playButton.clicked) {
+        if (username.length > 0) {
+            socket = io();
+            initSocketListeners();
+            socket.emit("join", { username });
+            document.removeEventListener("keydown", typeUsername);
+            document.removeEventListener("mousedown", mainMenuMouseDown);
+            document.removeEventListener("mouseup", mainMenuMouseUp);
+            document.removeEventListener("mousemove", mainMenuMouseMove);
+            clearInterval(drawIntervalId);
+            initLobby();
+        }
     }
+    playButton.clicked = false;
 }
 
 function drawMainMenu() {
+    mainMenuPhysics.update();
     ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
     drawGrid();
 
@@ -69,6 +82,9 @@ function drawMainMenu() {
     playButton.draw();
 
     // username input
+    ctx.setLineDash([]);
+    ctx.fillStyle = "black";
+    ctx.strokeStyle = "black";
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.rect(150, 300, 500, 50);
@@ -82,16 +98,19 @@ function drawMainMenu() {
     }
     if (cursorInputTimer >= 48) cursorInputTimer = 0;
     ctx.fillText(username, 150 + 5, 300 + 38);
+
+    mainMenuCursor.draw();
 }
 
 // lobby stuff
-let readyButton = new Button(300, 400, 200, 50, "ready");
-
-let levelIndex = 0;
+let lobbyPhysics = new toxi.physics2d.VerletPhysics2D();
+let lobbyCursor = new UICursorParticle(-100, 0, 50, -5, lobbyPhysics);
+let readyButton = new Button(300, 400, 200, 50, "ready", lobbyPhysics);
 let levelButtons = [
-    new Button(550, 50, 150, 50, "level 1"),
-    new Button(550, 100, 150, 50, "level 2"),
+    new Button(550, 50, 150, 50, "level 1", lobbyPhysics),
+    new Button(550, 100, 150, 50, "level 2", lobbyPhysics),
 ];
+let levelIndex = 0;
 
 function initLobby() {
     drawIntervalId = setInterval(drawLobby, 1000 / 60);
@@ -101,9 +120,11 @@ function initLobby() {
 
     document.addEventListener("mousedown", lobbyMouseDown);
     document.addEventListener("mouseup", lobbyMouseUp);
+    document.addEventListener("mousemove", lobbyMouseMove);
 }
 
 function lobbyMouseDown(e) {
+    lobbyCursor.pressed = true;
     let mouse = { x:e.clientX - bounds.left, y:e.clientY - bounds.top };
     readyButton.isClicked(mouse.x, mouse.y);
 
@@ -118,6 +139,7 @@ function lobbyMouseDown(e) {
 }
 
 function lobbyMouseUp() {
+    lobbyCursor.pressed = false;
     if (readyButton.clicked) {
         readyButton.clicked = false;
         ready = !ready;
@@ -125,7 +147,13 @@ function lobbyMouseUp() {
     }
 }
 
+function lobbyMouseMove(e) {
+    lobbyCursor.x = e.clientX - bounds.left;
+    lobbyCursor.y = e.clientY - bounds.top;
+}
+
 function drawLobby() {
+    lobbyPhysics.update();
     ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
     drawGrid();
 
@@ -162,6 +190,8 @@ function drawLobby() {
 
         levelButtons[i].draw();
     }
+
+    lobbyCursor.draw();
 }
 
 function returnLobby() {
@@ -187,9 +217,13 @@ function returnLobby() {
 }
 
 // win stuff
-let lobbyButton = new Button(300, 350, 200, 50, "lobby")
+let winPhysics = new toxi.physics2d.VerletPhysics2D();
+let winCursor = new UICursorParticle(-100, 0, 50, -5, winPhysics);
+let lobbyButton = new Button(300, 350, 200, 50, "lobby", winPhysics);
 
 function drawWin() {
+    winPhysics.update();
+
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
 
@@ -201,21 +235,30 @@ function drawWin() {
     ctx.fillText("yurr", canvas.clientWidth / 2 - ctx.measureText("yurr").width / 2, canvas.clientHeight / 3 + 50);
 
     lobbyButton.draw();
+    winCursor.draw();
 
     ctx.restore();
 }
 
 function winMouseDown(e) {
+    winCursor.pressed = true;
     lobbyButton.isClicked(e.clientX - bounds.left, e.clientY - bounds.top);
 }
 
 function winMouseUp() {
+    winCursor.pressed = false;
     if (lobbyButton.clicked) {
         document.removeEventListener("mousedown", winMouseDown);
         document.removeEventListener("mouseup", winMouseUp);
+        document.removeEventListener("mousemove", winMouseMove);
         lobbyButton.clicked = false;
         returnLobby();
     }
+}
+
+function winMouseMove(e) {
+    winCursor.x = e.clientX - bounds.left;
+    winCursor.y = e.clientY - bounds.top;
 }
 
 // in game stuff
@@ -449,6 +492,7 @@ function initSocketListeners() {
         document.removeEventListener("focus", updateScollOffset);
         document.addEventListener("mousedown", winMouseDown);
         document.addEventListener("mouseup", winMouseUp);
+        document.addEventListener("mousemove", winMouseMove);
     });
 
     socket.on('updateSelectedLevel', (index) => {

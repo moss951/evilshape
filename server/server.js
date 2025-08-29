@@ -283,7 +283,6 @@ function lobbyLoop() {
 
     // make sendable objects
     for (let i = 0; i < particles.length; i++) {
-        console.log(particles[i].color);
         clientParticles.push({ x:particles[i].x, y:particles[i].y, isPlayer:particles[i].isPlayer, currentBoostTime:particles[i].currentBoostTime, color:particles[i].color });
     }
 
