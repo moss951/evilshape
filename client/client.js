@@ -320,6 +320,14 @@ function drawGame() {
     drawGrid();
     level.draw();
 
+    ctx.fillStyle = "hsl(180, 100%, 50%, 0.1)"
+    ctx.beginPath();
+    ctx.moveTo(particles[0].x, particles[0].y);
+    for (let i = 1; i < particles.length; i++) {
+        ctx.lineTo(particles[i].x, particles[i].y);
+    }
+    ctx.fill();
+
     for (let i = 0; i < particles.length / PARTICLES_ALONG_EDGE; i++) {
         particles[i * PARTICLES_ALONG_EDGE].draw(usernames[i]);
     }
