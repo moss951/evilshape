@@ -7,7 +7,7 @@ class FloorServer extends RectServer {
     }
 
     particleCollision(particle) {
-        if (particle.x >= this.x && particle.x <= this.x + this.w && particle.y >= this.y && particle.previousY <= this.y) {
+        if (particle.x >= this.x - 1 && particle.x <= this.x + 1 + this.w && particle.y >= this.y && particle.previousY <= this.y) {
             return true;
         }
         return false;

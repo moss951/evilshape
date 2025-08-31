@@ -78,7 +78,7 @@ function drawMainMenu() {
 
     ctx.font ="128px DS-BIOS";
     ctx.fillStyle = "black";
-    ctx.fillText("evil shape", canvas.clientWidth / 2 - ctx.measureText("evil shape").width / 2, canvas.clientHeight / 3);
+    ctx.fillText("evil shape", 200, 250);
     playButton.draw();
 
     // username input
@@ -232,7 +232,7 @@ function drawWin() {
 
     ctx.font ="128px DS-BIOS";
     ctx.fillStyle = "black";
-    ctx.fillText("yurr", canvas.clientWidth / 2 - ctx.measureText("yurr").width / 2, canvas.clientHeight / 3 + 50);
+    ctx.fillText("yurr", 309, 250);
 
     lobbyButton.draw();
     winCursor.draw();
