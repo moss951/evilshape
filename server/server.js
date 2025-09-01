@@ -25,7 +25,7 @@ const FlagServer = require('./flagServer');
 
 const toxi = require('toxiclibsjs');
 const physics = new toxi.physics2d.VerletPhysics2D();
-const gravity = new toxi.physics2d.behaviors.GravityBehavior(new toxi.geom.Vec2D(0, 0.5));
+const gravity = new toxi.physics2d.behaviors.GravityBehavior(new toxi.geom.Vec2D(0, 0.25));
 physics.addBehavior(gravity);
 
 const PARTICLES_ALONG_EDGE = 2;
