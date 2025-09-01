@@ -116,7 +116,7 @@ io.on("connection", (socket) => {
     socket.on("join", (newPlayerData) => {
         console.log(socket.id  + " connected");
 
-        lobbyPlayers[socket.id] = new PlayerServer(newPlayerData.username, false);
+        lobbyPlayers[socket.id] = new PlayerServer(newPlayerData.username, false, "hsla(180,100%,50%,0.1)");
         numPlayers++;
 
         if (!inGame) io.emit('updatePlayerList', lobbyPlayers);
@@ -185,20 +185,12 @@ io.on("connection", (socket) => {
         levelIndex = index;
         io.emit("updateSelectedLevel", levelIndex);
     });
+
+    socket.on("colorChangeRequest", (newColor) => {
+        if (lobbyPlayers[socket.id] == undefined) return;
+        lobbyPlayers[socket.id].color = "hsla(" + newColor + ",100%,50%,0.1)";
+    });
 });
-
-// https://mika-s.github.io/javascript/colors/hsl/2017/12/05/generating-random-colors-in-javascript.html
-function generateHslaColors (saturation, lightness, alpha, amount) {
-    let colors = [];
-    let huedelta = Math.trunc(360 / amount);
-
-    for (let i = 0; i < amount; i++) {
-    let hue = i * huedelta;
-    colors.push(`hsla(${hue},${saturation}%,${lightness}%,${alpha})`);
-    }
-
-    return colors;
-}
 
 function getPolygonVertexCoords(numParticles, centerX, centerY, radiusX, radiusY) {
     const angle = 2 * Math.PI / numParticles;
@@ -243,12 +235,15 @@ function lobbyLoop() {
     numInGamePlayers = numPlayers;
 
     // make colors
-    let colors = generateHslaColors(100, 50, 0.1, numInGamePlayers);
+    let colors = [];
+    for (let id in lobbyPlayers) {
+        colors.push(lobbyPlayers[id].color);
+    }
 
     // make players
     for (let id in lobbyPlayers) {
         lobbyPlayers[id].ready = false;
-        players[id] = new PlayerServer(lobbyPlayers[id].username, true);
+        players[id] = new PlayerServer(lobbyPlayers[id].username, true, lobbyPlayers[id].color);
     }
 
     // make particles

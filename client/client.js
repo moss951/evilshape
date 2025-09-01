@@ -111,6 +111,7 @@ let levelButtons = [
     new Button(550, 100, 150, 50, "test", lobbyPhysics),
 ];
 let levelIndex = 0;
+let colorSlider = new Slider(0, 360, 180, 310, 300, 180);
 
 function initLobby() {
     drawIntervalId = setInterval(drawLobby, 1000 / 60);
@@ -136,6 +137,12 @@ function lobbyMouseDown(e) {
             }
         }
     }
+
+    colorSlider.isClicked(mouse.x, mouse.y);
+
+    if (colorSlider.clicked) {
+        colorSlider.updateVal(mouse.x);
+    }
 }
 
 function lobbyMouseUp() {
@@ -145,11 +152,23 @@ function lobbyMouseUp() {
         ready = !ready;
         socket.emit("ready", ready);
     }
+
+    if (colorSlider.clicked) {
+        socket.emit("colorChangeRequest", colorSlider.currentVal);
+    }
+
+    colorSlider.clicked = false;
 }
 
 function lobbyMouseMove(e) {
-    lobbyCursor.x = e.clientX - bounds.left;
-    lobbyCursor.y = e.clientY - bounds.top;
+    let mouse = { x:e.clientX - bounds.left, y:e.clientY - bounds.top };
+
+    lobbyCursor.x = mouse.x;
+    lobbyCursor.y = mouse.y;
+
+    if (colorSlider.clicked) {
+        colorSlider.updateVal(mouse.x);
+    }
 }
 
 function drawLobby() {
@@ -190,6 +209,8 @@ function drawLobby() {
 
         levelButtons[i].draw();
     }
+
+    colorSlider.draw();
 
     lobbyCursor.draw();
 }
