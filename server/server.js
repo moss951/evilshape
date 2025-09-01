@@ -34,6 +34,7 @@ let numInGamePlayers = 0;
 let cursorParticleNormalStrength;
 let cursorParticleBoostStrength;
 const maxBoostTime = 10;
+const gameSpeed = 0.01;
 
 let lobbyPlayers = {};
 let players = {};
@@ -331,7 +332,7 @@ function gameLoop() {
         }
     }
 
-    physics.update();
+    physics.update(gameSpeed);
 
     // wall collisions
     for (let i = 0; i < particles.length; i++) {
