@@ -165,10 +165,12 @@ io.on("connection", (socket) => {
     });
 
     socket.on("cursorBoostStartRequest", () => {
+        if (players[socket.id] == undefined) return;
         particles[players[socket.id].particleIndex].behaviors[0].attrStrength = cursorParticleBoostStrength;
     });
 
     socket.on("cursorBoostStopRequest", () => {
+        if (players[socket.id] == undefined) return;
         particles[players[socket.id].particleIndex].behaviors[0].attrStrength = cursorParticleNormalStrength;
         particles[players[socket.id].particleIndex].currentBoostTime = 0;
     });
